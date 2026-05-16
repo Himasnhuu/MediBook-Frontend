@@ -232,9 +232,9 @@ const ManageProviders = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(provider => (
+              {filtered.map((provider, index) => (
                 <tr key={provider.providerId}>
-                  <td>#{provider.providerId}</td>
+                  <td>#{index + 1}</td>
                   <td>#{provider.userId}</td>
                   <td style={{ fontWeight: '600', color: '#2563eb' }}>
                     {provider.specialization || '—'}

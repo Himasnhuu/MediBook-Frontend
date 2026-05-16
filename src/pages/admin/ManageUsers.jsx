@@ -32,11 +32,11 @@ const ManageUsers = () => {
     if (!window.confirm(`Delete this ${role}? This cannot be undone.`)) return;
     setDeletingId(userId);
     try {
-      await axiosInstance.delete(`/auth/deactivate/${userId}`);
-      toast.success('User deactivated successfully');
+      await axiosInstance.delete(`/auth/users/${userId}`);
+      toast.success('User deleted successfully');
       fetchUsers();
     } catch (err) {
-      toast.error('Failed to deactivate user');
+      toast.error('Failed to delete user');
     } finally {
       setDeletingId(null);
     }
@@ -175,9 +175,9 @@ const ManageUsers = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(user => (
+              {filtered.map((user, index) => (
                 <tr key={user.id}>
-                  <td>#{user.id}</td>
+                  <td>#{index + 1}</td>
                   <td style={{ fontWeight: '600', color: '#1e293b' }}>{user.fullName}</td>
                   <td style={{ fontSize: '13px', color: '#2563eb' }}>{user.email}</td>
                   <td style={{ fontSize: '13px' }}>{user.phone || '—'}</td>
@@ -224,7 +224,7 @@ const ManageUsers = () => {
                           onClick={() => handleDelete(user.id, user.role)}
                           disabled={deletingId === user.id}
                         >
-                          {deletingId === user.id ? '...' : '🗑️ Deactivate'}
+                          {deletingId === user.id ? '...' : '🗑️ Delete'}
                         </button>
                       )}
                       {user.role === 'ADMIN' && (
