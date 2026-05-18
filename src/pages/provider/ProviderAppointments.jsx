@@ -10,7 +10,6 @@ const ProviderAppointments = () => {
   const [filter, setFilter] = useState('ALL');
   const [completingId, setCompletingId] = useState(null);
 
-  // Medical record form
   const [showRecordForm, setShowRecordForm] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [recordForm, setRecordForm] = useState({
@@ -93,10 +92,10 @@ const ProviderAppointments = () => {
 
   const getStatusBadge = (status) => {
     const map = {
-      SCHEDULED:  'badge-info',
-      COMPLETED:  'badge-success',
-      CANCELLED:  'badge-danger',
-      NO_SHOW:    'badge-warning'
+      SCHEDULED: 'badge-info',
+      COMPLETED: 'badge-success',
+      CANCELLED: 'badge-danger',
+      NO_SHOW:   'badge-warning'
     };
     return map[status] || 'badge-info';
   };
@@ -118,10 +117,10 @@ const ProviderAppointments = () => {
     <div>
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#2C2825' }}>
           My Appointments
         </h2>
-        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+        <p style={{ color: '#8C7E72', fontSize: '14px', marginTop: '4px' }}>
           Complete appointments and create medical records
         </p>
       </div>
@@ -134,10 +133,10 @@ const ProviderAppointments = () => {
           gap: '1rem', marginBottom: '1.5rem'
         }}>
           {[
-            { label: 'Total',     value: appointments.length,                                        color: '#1e293b', bg: '#f8fafc', border: '#e2e8f0' },
-            { label: 'Scheduled', value: appointments.filter(a => a.status === 'SCHEDULED').length, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-            { label: 'Completed', value: appointments.filter(a => a.status === 'COMPLETED').length, color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-            { label: 'Cancelled', value: appointments.filter(a => a.status === 'CANCELLED').length, color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+            { label: 'Total',     value: appointments.length,                                        color: '#2C2825', bg: '#FFFFFF',  border: '#E2D9CE' },
+            { label: 'Scheduled', value: appointments.filter(a => a.status === 'SCHEDULED').length,  color: '#2D6B6B', bg: '#E8F4F4',  border: '#B8DADA' },
+            { label: 'Completed', value: appointments.filter(a => a.status === 'COMPLETED').length,  color: '#3D7A5A', bg: '#EBF5EF',  border: '#B8D8C6' },
+            { label: 'Cancelled', value: appointments.filter(a => a.status === 'CANCELLED').length,  color: '#A04040', bg: '#FBF0F0',  border: '#E8C4C4' },
           ].map(stat => (
             <div key={stat.label} className="card" style={{
               backgroundColor: stat.bg, border: `1px solid ${stat.border}`,
@@ -146,7 +145,7 @@ const ProviderAppointments = () => {
               <p style={{ fontSize: '28px', fontWeight: '800', color: stat.color }}>
                 {stat.value}
               </p>
-              <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#8C7E72', marginTop: '4px', fontWeight: '500' }}>
                 {stat.label}
               </p>
             </div>
@@ -162,9 +161,10 @@ const ProviderAppointments = () => {
             onClick={() => setFilter(f)}
             className="btn"
             style={{
-              backgroundColor: filter === f ? '#0f766e' : '#f1f5f9',
-              color: filter === f ? 'white' : '#64748b',
-              padding: '8px 16px', fontSize: '13px'
+              backgroundColor: filter === f ? '#2D6B6B' : '#F2EDE4',
+              color: filter === f ? 'white' : '#8C7E72',
+              padding: '8px 16px', fontSize: '13px',
+              border: filter === f ? 'none' : '1px solid #E2D9CE'
             }}
           >
             {f}
@@ -174,7 +174,7 @@ const ProviderAppointments = () => {
 
       {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#8C7E72' }}>
           Loading appointments...
         </div>
       )}
@@ -184,10 +184,9 @@ const ProviderAppointments = () => {
         <div style={{
           textAlign: 'center', padding: '3rem',
           backgroundColor: 'white', borderRadius: '12px',
-          color: '#64748b'
+          color: '#8C7E72', border: '1px solid #E2D9CE'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>📅</div>
-          <p style={{ fontSize: '16px', fontWeight: '600' }}>
+          <p style={{ fontSize: '16px', fontWeight: '600', color: '#2C2825' }}>
             No {filter !== 'ALL' ? filter.toLowerCase() : ''} appointments found
           </p>
         </div>
@@ -195,6 +194,7 @@ const ProviderAppointments = () => {
 
       {/* Appointments table */}
       {!loading && filtered.length > 0 && (
+        <div className="table-wrap">
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table>
             <thead>
@@ -219,10 +219,8 @@ const ProviderAppointments = () => {
                     {appt.startTime} - {appt.endTime}
                   </td>
                   <td>{appt.serviceType}</td>
-                  <td>
-                    <span style={{ fontSize: '12px' }}>
-                      {appt.modeOfConsultation === 'IN_PERSON' ? '🏥 In Person' : '💻 Tele'}
-                    </span>
+                  <td style={{ fontSize: '13px', color: '#5C524A' }}>
+                    {appt.modeOfConsultation === 'IN_PERSON' ? 'In Person' : 'Teleconsultation'}
                   </td>
                   <td>
                     <span className={`badge ${getStatusBadge(appt.status)}`}>
@@ -234,20 +232,20 @@ const ProviderAppointments = () => {
                       {appt.status === 'SCHEDULED' && (
                         <button
                           className="btn btn-success"
-                          style={{ padding: '6px 10px', fontSize: '12px' }}
+                          style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '600' }}
                           onClick={() => handleComplete(appt.appointmentId)}
                           disabled={completingId === appt.appointmentId}
                         >
-                          {completingId === appt.appointmentId ? '...' : '✅ Complete'}
+                          {completingId === appt.appointmentId ? 'Completing...' : 'Complete'}
                         </button>
                       )}
                       {appt.status === 'COMPLETED' && (
                         <button
                           className="btn btn-primary"
-                          style={{ padding: '6px 10px', fontSize: '12px' }}
+                          style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '600' }}
                           onClick={() => openRecordForm(appt)}
                         >
-                          📋 Add Record
+                          Add Record
                         </button>
                       )}
                     </div>
@@ -257,118 +255,112 @@ const ProviderAppointments = () => {
             </tbody>
           </table>
         </div>
+        </div>
       )}
 
       {/* ── Medical Record Modal ── */}
       {showRecordForm && selectedAppointment && (
         <div style={{
           position: 'fixed', inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(26,21,17,0.6)',
           display: 'flex', alignItems: 'center',
           justifyContent: 'center', zIndex: 1000,
-          padding: '1rem'
+          padding: '1rem', backdropFilter: 'blur(4px)'
         }}>
           <div style={{
-            backgroundColor: 'white', borderRadius: '16px',
-            padding: '2rem', width: '100%', maxWidth: '540px',
+            backgroundColor: '#FAF7F2', borderRadius: '20px',
+            width: '100%', maxWidth: '540px',
             maxHeight: '90vh', overflowY: 'auto',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+            boxShadow: '0 16px 48px rgba(26,21,17,0.3)'
           }}>
-            {/* Modal header */}
             <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: '1.5rem'
+              background: 'linear-gradient(135deg, #1F4E4E, #2D6B6B)',
+              padding: '1.5rem 2rem', borderRadius: '20px 20px 0 0',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'white', marginBottom: '2px' }}>
                   Add Medical Record
                 </h3>
-                <p style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>
-                  Appointment #{selectedAppointment.appointmentId} —
-                  Patient #{selectedAppointment.patientId}
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+                  Appointment #{selectedAppointment.appointmentId} — Patient #{selectedAppointment.patientId}
                 </p>
               </div>
               <button
                 onClick={() => setShowRecordForm(false)}
                 style={{
-                  background: 'none', border: 'none',
-                  fontSize: '20px', cursor: 'pointer', color: '#94a3b8'
+                  background: 'rgba(255,255,255,0.15)', border: 'none',
+                  borderRadius: '8px', width: '34px', height: '34px',
+                  color: 'white', fontSize: '16px', cursor: 'pointer'
                 }}
               >
                 ✕
               </button>
             </div>
 
-            <div className="form-group">
-              <label>Diagnosis *</label>
-              <input
-                type="text"
-                placeholder="e.g. Viral fever, Hypertension"
-                value={recordForm.diagnosis}
-                onChange={e => setRecordForm({ ...recordForm, diagnosis: e.target.value })}
-              />
-            </div>
+            <div style={{ padding: '1.5rem 2rem' }}>
+              <div className="form-group">
+                <label>Diagnosis *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Viral fever, Hypertension"
+                  value={recordForm.diagnosis}
+                  onChange={e => setRecordForm({ ...recordForm, diagnosis: e.target.value })}
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Prescription</label>
-              <textarea
-                rows={4}
-                placeholder="List medications, dosage, frequency..."
-                value={recordForm.prescription}
-                onChange={e => setRecordForm({ ...recordForm, prescription: e.target.value })}
-                style={{
-                  width: '100%', padding: '10px 12px',
-                  border: '1px solid #cbd5e1', borderRadius: '8px',
-                  fontSize: '14px', outline: 'none', resize: 'vertical'
-                }}
-              />
-            </div>
+              <div className="form-group">
+                <label>Prescription</label>
+                <textarea
+                  rows={4}
+                  placeholder="List medications, dosage, frequency..."
+                  value={recordForm.prescription}
+                  onChange={e => setRecordForm({ ...recordForm, prescription: e.target.value })}
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Notes</label>
-              <textarea
-                rows={3}
-                placeholder="Additional observations or instructions..."
-                value={recordForm.notes}
-                onChange={e => setRecordForm({ ...recordForm, notes: e.target.value })}
-                style={{
-                  width: '100%', padding: '10px 12px',
-                  border: '1px solid #cbd5e1', borderRadius: '8px',
-                  fontSize: '14px', outline: 'none', resize: 'vertical'
-                }}
-              />
-            </div>
+              <div className="form-group">
+                <label>Notes</label>
+                <textarea
+                  rows={3}
+                  placeholder="Additional observations or instructions..."
+                  value={recordForm.notes}
+                  onChange={e => setRecordForm({ ...recordForm, notes: e.target.value })}
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Follow-up Date (optional)</label>
-              <input
-                type="date"
-                value={recordForm.followUpDate}
-                onChange={e => setRecordForm({ ...recordForm, followUpDate: e.target.value })}
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
+              <div className="form-group">
+                <label>Follow-up Date (optional)</label>
+                <input
+                  type="date"
+                  value={recordForm.followUpDate}
+                  onChange={e => setRecordForm({ ...recordForm, followUpDate: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                />
+              </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1, padding: '12px' }}
-                onClick={handleSaveRecord}
-                disabled={savingRecord}
-              >
-                {savingRecord ? 'Saving...' : '💾 Save Record'}
-              </button>
-              <button
-                className="btn"
-                style={{
-                  flex: 1, padding: '12px',
-                  backgroundColor: '#f1f5f9', color: '#64748b'
-                }}
-                onClick={() => setShowRecordForm(false)}
-                disabled={savingRecord}
-              >
-                Cancel
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ flex: 1, padding: '12px' }}
+                  onClick={handleSaveRecord}
+                  disabled={savingRecord}
+                >
+                  {savingRecord ? 'Saving...' : 'Save Record'}
+                </button>
+                <button
+                  className="btn"
+                  style={{
+                    flex: 1, padding: '12px',
+                    backgroundColor: '#F2EDE4', color: '#8C7E72',
+                    border: '1px solid #E2D9CE'
+                  }}
+                  onClick={() => setShowRecordForm(false)}
+                  disabled={savingRecord}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

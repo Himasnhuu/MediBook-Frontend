@@ -61,18 +61,18 @@ const ManageSpecializations = () => {
   return (
     <div>
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#2C2825' }}>
           Manage Specializations
         </h2>
-        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+        <p style={{ color: '#8C7E72', fontSize: '14px', marginTop: '4px' }}>
           Add or remove medical specializations — providers and patients will see these instantly
         </p>
       </div>
 
       {/* Add new */}
-      <div className="card" style={{ marginBottom: '1.5rem', border: '2px solid #c7d2fe' }}>
-        <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', marginBottom: '1rem' }}>
-          ➕ Add New Specialization
+      <div className="card" style={{ marginBottom: '1.5rem', border: '1px solid #E2D9CE' }}>
+        <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#2C2825', marginBottom: '1rem' }}>
+          + Add New Specialization
         </h3>
         <form onSubmit={handleAdd} style={{ display: 'flex', gap: '10px' }}>
           <input
@@ -83,17 +83,18 @@ const ManageSpecializations = () => {
             disabled={saving}
             style={{
               flex: 1, padding: '10px 14px',
-              border: '1px solid #cbd5e1', borderRadius: '8px',
-              fontSize: '14px', outline: 'none'
+              border: '1.5px solid #E2D9CE', borderRadius: '8px',
+              fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+              color: '#2C2825', backgroundColor: '#FAFAF8'
             }}
           />
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ padding: '10px 24px' }}
+            style={{ padding: '10px 28px', fontSize: '14px' }}
             disabled={saving}
           >
-            {saving ? 'Adding...' : '➕ Add'}
+            {saving ? 'Adding...' : '+ Add'}
           </button>
         </form>
       </div>
@@ -109,7 +110,7 @@ const ManageSpecializations = () => {
 
       {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '2rem', color: '#8C7E72' }}>
           Loading...
         </div>
       )}
@@ -118,11 +119,11 @@ const ManageSpecializations = () => {
       {!loading && specializations.length === 0 && (
         <div style={{
           textAlign: 'center', padding: '3rem',
-          backgroundColor: 'white', borderRadius: '12px', color: '#64748b'
+          backgroundColor: 'white', borderRadius: '12px',
+          color: '#8C7E72', border: '1px solid #E2D9CE'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🏥</div>
-          <p style={{ fontWeight: '600' }}>No specializations yet</p>
-          <p style={{ fontSize: '13px', marginTop: '4px' }}>
+          <p style={{ fontWeight: '600', color: '#2C2825' }}>No specializations yet</p>
+          <p style={{ fontSize: '13px', marginTop: '6px' }}>
             Add specializations above — they will appear in provider registration and patient search instantly
           </p>
         </div>
@@ -130,6 +131,7 @@ const ManageSpecializations = () => {
 
       {/* List */}
       {!loading && specializations.length > 0 && (
+        <div className="table-wrap">
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table>
             <thead>
@@ -143,27 +145,28 @@ const ManageSpecializations = () => {
             <tbody>
               {specializations.map(spec => (
                 <tr key={spec.id}>
-                  <td>#{spec.id}</td>
-                  <td style={{ fontWeight: '600', color: '#1e293b', fontSize: '15px' }}>
-                    🏥 {spec.name}
+                  <td style={{ color: '#8C7E72', fontSize: '13px' }}>#{spec.id}</td>
+                  <td style={{ fontWeight: '600', color: '#2C2825', fontSize: '14px' }}>
+                    {spec.name}
                   </td>
                   <td>
-                    <span className="badge badge-success">✓ Active</span>
+                    <span className="badge badge-success">Active</span>
                   </td>
                   <td>
                     <button
                       className="btn btn-danger"
-                      style={{ padding: '6px 12px', fontSize: '12px' }}
+                      style={{ padding: '6px 16px', fontSize: '13px', fontWeight: '600' }}
                       onClick={() => handleDelete(spec.id, spec.name)}
                       disabled={deletingId === spec.id}
                     >
-                      {deletingId === spec.id ? '...' : '🗑️ Delete'}
+                      {deletingId === spec.id ? 'Deleting...' : 'Delete'}
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
     </div>

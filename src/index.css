@@ -1,7 +1,17 @@
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
 }
 
 @keyframes scrollLeft {
@@ -42,10 +52,12 @@
 }
 
 body {
-  font-family: 'Segoe UI', 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--warm-bg);
   color: var(--warm-text);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ── PAGE CONTAINER ── */
@@ -252,4 +264,308 @@ table tr:last-child td { border-bottom: none; }
   border-radius: var(--radius-md) !important;
   font-family: inherit !important;
   font-size: 14px !important;
+}
+
+/* ── DASHBOARD LAYOUT ── */
+.dashboard-wrapper {
+  display: flex;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-sidebar {
+  flex-shrink: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: width 0.25s ease;
+}
+
+.dashboard-content {
+  flex: 1;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+.mobile-menu-btn {
+  display: none;
+}
+
+/* ── NAVBAR MOBILE ── */
+.nav-desktop { display: flex; align-items: center; gap: 1.5rem; }
+.nav-hamburger { display: none; }
+.nav-mobile-menu {
+  display: none;
+}
+
+/* ── TABLE RESPONSIVE ── */
+.table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── HOME PAGE ── */
+.home-hero { padding: 7rem 3rem; }
+.home-section { padding: 5rem 3rem; }
+.home-stats { padding: 1.8rem 3rem; gap: 4rem; }
+.home-hero-title { font-size: 54px; }
+.home-hero-subtitle { font-size: 18px; }
+
+/* ────────────────────────────────────────────
+   MOBILE BREAKPOINT  (max-width: 768px)
+──────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* ── GLOBAL ── */
+  .page-container {
+    padding: 0 1rem;
+    margin: 1rem auto;
+  }
+
+  .card {
+    padding: 1rem;
+    border-radius: 12px;
+    overflow-x: auto !important;
+  }
+
+  /* ── TABLES ── */
+  table {
+    min-width: 520px;
+  }
+
+  table th,
+  table td {
+    padding: 10px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .table-wrap {
+    border-radius: 12px;
+    border: 1px solid var(--warm-border);
+  }
+
+  /* ── BUTTONS ── */
+  .btn { font-size: 13px; padding: 9px 14px; }
+
+  /* ── NAVBAR ── */
+  .nav-desktop { display: none !important; }
+
+  .nav-hamburger {
+    display: flex !important;
+    align-items: center;
+    background: none;
+    border: 1.5px solid var(--warm-border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    color: var(--warm-text-2);
+    font-size: 18px;
+  }
+
+  .nav-mobile-menu {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 64px;
+    left: 0;
+    right: 0;
+    background: white;
+    border-bottom: 2px solid var(--warm-border);
+    z-index: 500;
+    box-shadow: var(--shadow-md);
+    padding: 0.5rem 0;
+  }
+
+  .nav-mobile-menu a,
+  .nav-mobile-menu button,
+  .nav-mobile-menu span {
+    display: block;
+    padding: 12px 1.5rem;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--warm-text-2);
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    border-bottom: 1px solid var(--warm-bg-2);
+  }
+
+  .nav-mobile-menu .nav-email {
+    font-size: 12px;
+    color: var(--warm-text-3);
+    font-weight: 400;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .nav-mobile-menu .nav-logout-btn {
+    color: #A04040;
+  }
+
+  /* ── DASHBOARD LAYOUT ── */
+  .dashboard-wrapper {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow: visible;
+  }
+
+  .dashboard-sidebar {
+    position: fixed !important;
+    top: 64px;
+    left: 0;
+    height: calc(100vh - 64px) !important;
+    z-index: 300;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease !important;
+    width: 260px !important;
+    overflow-y: auto;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+  }
+
+  .dashboard-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    top: 64px;
+    background: rgba(26,21,17,0.55);
+    z-index: 299;
+    backdrop-filter: blur(2px);
+  }
+
+  .dashboard-content {
+    height: auto !important;
+    min-height: calc(100vh - 64px);
+    overflow-y: visible;
+    padding: 1rem !important;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 7px 12px;
+    cursor: pointer;
+    color: var(--warm-text-3);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    margin-bottom: 1rem;
+  }
+
+  /* ── HOME PAGE ── */
+  .home-hero {
+    padding: 4rem 1.25rem !important;
+  }
+
+  .home-hero-title {
+    font-size: 36px !important;
+    letter-spacing: -0.5px !important;
+  }
+
+  .home-hero-subtitle {
+    font-size: 15px !important;
+  }
+
+  .home-section {
+    padding: 3rem 1.25rem !important;
+  }
+
+  .home-stats {
+    padding: 1.2rem 1.25rem !important;
+    gap: 1.5rem !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .home-section-title {
+    font-size: 26px !important;
+  }
+
+  /* ── AUTH PAGES ── */
+  .auth-wrapper {
+    padding: 1rem;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+
+  .auth-card {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+
+  /* ── STATS SUMMARY CARDS ── */
+  .summary-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── MODALS ── */
+  .modal-inner {
+    max-height: 95vh;
+    border-radius: 16px !important;
+  }
+
+  /* ── PROVIDER PROFILE 2-COL → 1-COL ── */
+  .profile-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── FILTER BARS ── */
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* ── SECTION HEADINGS ── */
+  .section-title { font-size: 22px; }
+}
+
+  /* ── PATIENT RECORDS 2-COL FLEX → STACK ── */
+  .profile-grid {
+    flex-direction: column !important;
+    display: flex !important;
+  }
+
+  /* Fixed-width sidebar panels stack full-width on mobile */
+  .profile-grid > div[style] {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+  }
+
+  /* ── BOOKING STEPPER ── */
+  .booking-steps {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+/* ── EXTRA SMALL (max-width: 480px) ── */
+@media (max-width: 480px) {
+  .card { padding: 0.85rem; }
+
+  .home-hero-title { font-size: 28px !important; }
+  .home-hero-subtitle { font-size: 14px !important; }
+  .home-section { padding: 2.5rem 1rem !important; }
+  .home-section-title { font-size: 22px !important; }
+  .home-stats { grid-template-columns: 1fr 1fr !important; }
+
+  table th, table td { font-size: 11px; padding: 8px; }
+
+  .btn { padding: 8px 12px; font-size: 12px; }
 }

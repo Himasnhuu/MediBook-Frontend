@@ -63,20 +63,22 @@ const LoginPage = () => {
   };
 
   return (
-    <div style={{
+    <div className="auth-wrapper" style={{
       minHeight: '100vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#f0f4f8'
+      backgroundColor: '#FAF7F2',
+      padding: '1.5rem'
     }}>
-      <div style={{
+      <div className="auth-card" style={{
         backgroundColor: 'white',
         borderRadius: '16px',
         padding: '2.5rem',
         width: '100%',
         maxWidth: '420px',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.1)'
+        boxShadow: '0 4px 24px rgba(44,40,37,0.1)',
+        border: '1px solid #E2D9CE'
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -166,57 +168,6 @@ const LoginPage = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
-        {/* Quick login buttons for testing */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <p style={{
-            textAlign: 'center', fontSize: '12px',
-            color: '#94a3b8', marginBottom: '8px'
-          }}>
-            Quick login for testing:
-          </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              className="btn"
-              style={{
-                flex: 1, fontSize: '12px', padding: '8px',
-                backgroundColor: '#dbeafe', color: '#2563eb'
-              }}
-              onClick={() => {
-                setEmail('rahul.patient@medibook.com');
-                setPassword('patient123');
-              }}
-            >
-              Patient
-            </button>
-            <button
-              className="btn"
-              style={{
-                flex: 1, fontSize: '12px', padding: '8px',
-                backgroundColor: '#dcfce7', color: '#16a34a'
-              }}
-              onClick={() => {
-                setEmail('dr.himanshu@medibook.com');
-                setPassword('doctor123');
-              }}
-            >
-              Doctor
-            </button>
-            <button
-              className="btn"
-              style={{
-                flex: 1, fontSize: '12px', padding: '8px',
-                backgroundColor: '#fef9c3', color: '#ca8a04'
-              }}
-              onClick={() => {
-                setEmail('admin@medibook.com');
-                setPassword('admin123');
-              }}
-            >
-              Admin
-            </button>
-          </div>
-        </div>
 
         {/* Register link */}
         <p style={{

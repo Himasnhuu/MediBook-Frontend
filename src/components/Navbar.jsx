@@ -12,6 +12,7 @@ const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const userId = localStorage.getItem('userId');
 
   useEffect(() => {
@@ -27,10 +28,16 @@ const Navbar = () => {
       if (showNotifPanel && !e.target.closest('.notif-container')) {
         setShowNotifPanel(false);
       }
+      if (mobileOpen && !e.target.closest('.nav-mobile-menu') && !e.target.closest('.nav-hamburger')) {
+        setMobileOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showNotifPanel]);
+  }, [showNotifPanel, mobileOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   const fetchUnreadCount = async () => {
     try {
@@ -92,23 +99,26 @@ const Navbar = () => {
   return (
     <nav style={{
       backgroundColor: '#FFFFFF',
-      padding: '0 2rem',
+      padding: '0 1.5rem',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       height: '64px',
       boxShadow: '0 2px 8px rgba(44,40,37,0.08)',
-      borderBottom: '1px solid #E2D9CE'
+      borderBottom: '1px solid #E2D9CE',
+      position: 'relative',
+      zIndex: 400
     }}>
       <Link to="/" style={{
         color: '#2D6B6B', textDecoration: 'none',
-        fontSize: '22px', fontWeight: '800',
-        letterSpacing: '-0.5px'
+        fontSize: '20px', fontWeight: '800',
+        letterSpacing: '-0.5px', flexShrink: 0
       }}>
         🏥 MediBook
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      {/* ── DESKTOP NAV ── */}
+      <div className="nav-desktop">
         {isAuthenticated() ? (
           <>
             <Link to={getDashboardLink()} style={{
@@ -117,7 +127,7 @@ const Navbar = () => {
             }}>
               Dashboard
             </Link>
-            <span style={{ color: '#8C7E72', fontSize: '13px' }}>
+            <span style={{ color: '#8C7E72', fontSize: '13px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {email} ({role})
             </span>
 
@@ -155,7 +165,6 @@ const Navbar = () => {
                   border: '1px solid #E2D9CE', zIndex: 1000,
                   maxHeight: '480px', overflowY: 'auto'
                 }}>
-                  {/* Panel header */}
                   <div style={{
                     padding: '1rem 1.2rem',
                     borderBottom: '1px solid #E2D9CE',
@@ -174,8 +183,6 @@ const Navbar = () => {
                       }}
                     >✕</button>
                   </div>
-
-                  {/* Notifications list */}
                   {notifications.length === 0 ? (
                     <div style={{ padding: '2rem', textAlign: 'center', color: '#8C7E72' }}>
                       <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔔</div>
@@ -200,23 +207,15 @@ const Navbar = () => {
                             {getNotifIcon(notif.type)}
                           </div>
                           <div style={{ flex: 1 }}>
-                            <p style={{
-                              fontSize: '13px', fontWeight: '700',
-                              color: '#2C2825', marginBottom: '3px'
-                            }}>
+                            <p style={{ fontSize: '13px', fontWeight: '700', color: '#2C2825', marginBottom: '3px' }}>
                               {notif.title}
                             </p>
                             <p style={{
-                              fontSize: '12px', color: '#8C7E72',
-                              lineHeight: '1.5',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
-                              overflow: 'hidden'
+                              fontSize: '12px', color: '#8C7E72', lineHeight: '1.5',
+                              display: '-webkit-box', WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical', overflow: 'hidden'
                             }}
-                              dangerouslySetInnerHTML={{
-                                __html: notif.message?.substring(0, 100) + '...'
-                              }}
+                              dangerouslySetInnerHTML={{ __html: notif.message?.substring(0, 100) + '...' }}
                             />
                             <p style={{ fontSize: '11px', color: '#C9963F', marginTop: '4px' }}>
                               {notif.createdAt
@@ -244,15 +243,10 @@ const Navbar = () => {
             <button
               onClick={logout}
               style={{
-                backgroundColor: '#2D6B6B',
-                color: 'white',
-                border: 'none',
-                padding: '6px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '600',
-                fontSize: '14px',
-                fontFamily: 'inherit'
+                backgroundColor: '#2D6B6B', color: 'white',
+                border: 'none', padding: '6px 16px',
+                borderRadius: '6px', cursor: 'pointer',
+                fontWeight: '600', fontSize: '14px', fontFamily: 'inherit'
               }}>
               Logout
             </button>
@@ -266,19 +260,120 @@ const Navbar = () => {
               Login
             </Link>
             <Link to={ROUTES.REGISTER} style={{
-              backgroundColor: '#2D6B6B',
-              color: 'white',
-              textDecoration: 'none',
-              padding: '6px 16px',
-              borderRadius: '6px',
-              fontWeight: '600',
-              fontSize: '14px'
+              backgroundColor: '#2D6B6B', color: 'white',
+              textDecoration: 'none', padding: '6px 16px',
+              borderRadius: '6px', fontWeight: '600', fontSize: '14px'
             }}>
               Register
             </Link>
           </>
         )}
       </div>
+
+      {/* ── MOBILE: notification badge + hamburger ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {isAuthenticated() && (
+          <div style={{ position: 'relative' }} className="notif-container">
+            <button
+              className="nav-hamburger"
+              onClick={handleOpenNotifications}
+              style={{
+                background: 'none', border: '1.5px solid #E2D9CE',
+                borderRadius: '8px', padding: '6px 10px',
+                cursor: 'pointer', fontSize: '18px', position: 'relative', color: '#5C524A'
+              }}
+            >
+              🔔
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-5px', right: '-5px',
+                  backgroundColor: '#C9963F', color: 'white',
+                  borderRadius: '50%', width: '16px', height: '16px',
+                  fontSize: '9px', fontWeight: '800',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </button>
+            {showNotifPanel && (
+              <div style={{
+                position: 'fixed', top: '64px', left: '0', right: '0',
+                backgroundColor: 'white', borderBottom: '1px solid #E2D9CE',
+                zIndex: 600, maxHeight: '70vh', overflowY: 'auto',
+                boxShadow: '0 8px 32px rgba(44,40,37,0.16)'
+              }}>
+                <div style={{
+                  padding: '1rem 1.2rem',
+                  borderBottom: '1px solid #E2D9CE',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  position: 'sticky', top: 0, backgroundColor: 'white'
+                }}>
+                  <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#2C2825' }}>🔔 Notifications</h3>
+                  <button onClick={() => setShowNotifPanel(false)}
+                    style={{ background: 'none', border: 'none', fontSize: '16px', cursor: 'pointer', color: '#8C7E72' }}>✕</button>
+                </div>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#8C7E72' }}>
+                    <p style={{ fontSize: '14px' }}>No notifications yet</p>
+                  </div>
+                ) : (
+                  notifications.map(notif => (
+                    <div key={notif.notificationId} style={{
+                      padding: '0.85rem 1.2rem', borderBottom: '1px solid #F2EDE4',
+                      backgroundColor: notif.isRead ? 'white' : '#FDF8F0'
+                    }}>
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                        <div style={{
+                          width: '32px', height: '32px', borderRadius: '50%',
+                          backgroundColor: getNotifColor(notif.type).bg,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', flexShrink: 0
+                        }}>
+                          {getNotifIcon(notif.type)}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '13px', fontWeight: '700', color: '#2C2825', marginBottom: '2px' }}>{notif.title}</p>
+                          <p style={{ fontSize: '12px', color: '#8C7E72' }}
+                            dangerouslySetInnerHTML={{ __html: notif.message?.substring(0, 80) + '...' }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <button
+          className="nav-hamburger"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          {mobileOpen ? '✕' : '☰'}
+        </button>
+      </div>
+
+      {/* ── MOBILE DROPDOWN MENU ── */}
+      {mobileOpen && (
+        <div className="nav-mobile-menu">
+          {isAuthenticated() ? (
+            <>
+              <span className="nav-email">{email} · {role}</span>
+              <Link to={getDashboardLink()}>Dashboard</Link>
+              <Link to="/change-password">Change Password</Link>
+              <button className="nav-logout-btn" onClick={() => { logout(); setMobileOpen(false); }}>
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to={ROUTES.LOGIN}>Login</Link>
+              <Link to={ROUTES.REGISTER}>Register</Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 };

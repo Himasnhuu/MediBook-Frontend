@@ -261,7 +261,10 @@ const DoctorsPage = () => {
                   background: 'linear-gradient(135deg, #E8F4F4 0%, #C8E6E6 50%, #2D6B6B 100%)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  <span style={{ fontSize: '110px', lineHeight: 1 }}>👨‍⚕️</span>
+                  <svg width="140" height="160" viewBox="0 0 130 150" style={{ marginBottom: '-8px' }}>
+                    <circle cx="65" cy="48" r="30" fill="rgba(255,255,255,0.9)"/>
+                    <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(255,255,255,0.9)"/>
+                  </svg>
                   <div style={{ position: 'absolute', bottom: '12px', left: '12px' }}>
                     <span style={{
                       backgroundColor: 'rgba(255,255,255,0.95)', color: '#2D6B6B',
@@ -350,11 +353,17 @@ const DoctorsPage = () => {
               >✕</button>
               <div style={{
                 width: '90px', height: '90px', borderRadius: '50%',
-                background: 'rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.15)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '42px', margin: '0 auto 1rem',
-                border: '3px solid rgba(255,255,255,0.4)'
-              }}>👨‍⚕️</div>
+                margin: '0 auto 1rem',
+                border: '3px solid rgba(255,255,255,0.4)',
+                overflow: 'hidden'
+              }}>
+                <svg width="60" height="70" viewBox="0 0 130 150">
+                  <circle cx="65" cy="48" r="30" fill="rgba(255,255,255,0.9)"/>
+                  <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(255,255,255,0.9)"/>
+                </svg>
+              </div>
               <h2 style={{ fontSize: '22px', fontWeight: '800', color: 'white', marginBottom: '6px' }}>
                 Dr. {detailDoctor.doctorName || `Provider #${detailDoctor.providerId}`}
               </h2>

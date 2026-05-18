@@ -8,9 +8,9 @@ import {
 } from '../../api/scheduleApi';
 
 const STATUS_COLORS = {
-  AVAILABLE: { badge: 'badge-success', label: '🟢 Available' },
-  BOOKED:    { badge: 'badge-info',    label: '🔵 Booked'    },
-  BLOCKED:   { badge: 'badge-danger',  label: '🔴 Blocked'   }
+  AVAILABLE: { badge: 'badge-success', label: 'Available' },
+  BOOKED:    { badge: 'badge-info',    label: 'Booked'    },
+  BLOCKED:   { badge: 'badge-danger',  label: 'Blocked'   }
 };
 
 const ManageSlots = () => {
@@ -20,7 +20,6 @@ const ManageSlots = () => {
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [actioningId, setActioningId] = useState(null);
 
-  // Add slot form
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     date: '',
@@ -138,30 +137,30 @@ const ManageSlots = () => {
         alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '10px'
       }}>
         <div>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#2C2825' }}>
             Manage Slots
           </h2>
-          <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+          <p style={{ color: '#8C7E72', fontSize: '14px', marginTop: '4px' }}>
             Add and manage your availability slots
           </p>
         </div>
         <button
-          className="btn btn-success"
+          className="btn btn-primary"
           style={{ padding: '10px 20px' }}
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? '✕ Cancel' : '➕ Add New Slot'}
+          {showForm ? 'Cancel' : '+ Add New Slot'}
         </button>
       </div>
 
       {/* Add Slot Form */}
       {showForm && (
         <div className="card" style={{
-          border: '2px solid #bbf7d0', backgroundColor: '#f0fdf4',
+          border: '2px solid #B8DADA', backgroundColor: '#E8F4F4',
           marginBottom: '1.5rem'
         }}>
-          <h3 style={{ marginBottom: '1.2rem', color: '#15803d', fontSize: '16px' }}>
-            ➕ New Availability Slot
+          <h3 style={{ marginBottom: '1.2rem', color: '#1F4E4E', fontSize: '16px', fontWeight: '700' }}>
+            New Availability Slot
           </h3>
           <div style={{
             display: 'grid',
@@ -218,12 +217,12 @@ const ManageSlots = () => {
             </div>
           </div>
           <button
-            className="btn btn-success"
+            className="btn btn-primary"
             style={{ marginTop: '1.2rem', padding: '10px 28px' }}
             onClick={handleAddSlot}
             disabled={saving}
           >
-            {saving ? 'Saving...' : '💾 Save Slot'}
+            {saving ? 'Saving...' : 'Save Slot'}
           </button>
         </div>
       )}
@@ -233,24 +232,23 @@ const ManageSlots = () => {
         display: 'flex', gap: '12px', marginBottom: '1.5rem',
         flexWrap: 'wrap', alignItems: 'center'
       }}>
-        <div className="form-group" style={{ margin: 0 }}>
-          <input
-            type="date"
-            value={filterDate}
-            onChange={e => setFilterDate(e.target.value)}
-            style={{
-              padding: '8px 12px', border: '1px solid #cbd5e1',
-              borderRadius: '8px', fontSize: '13px', outline: 'none'
-            }}
-          />
-        </div>
+        <input
+          type="date"
+          value={filterDate}
+          onChange={e => setFilterDate(e.target.value)}
+          style={{
+            padding: '8px 12px', border: '1.5px solid #E2D9CE',
+            borderRadius: '8px', fontSize: '13px', outline: 'none',
+            fontFamily: 'inherit', backgroundColor: '#FAFAF8'
+          }}
+        />
         {filterDate && (
           <button
             className="btn"
-            style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '8px 12px', fontSize: '13px' }}
+            style={{ backgroundColor: '#F2EDE4', color: '#8C7E72', padding: '8px 12px', fontSize: '13px', border: '1px solid #E2D9CE' }}
             onClick={() => setFilterDate('')}
           >
-            ✕ Clear Date
+            Clear Date
           </button>
         )}
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -260,23 +258,24 @@ const ManageSlots = () => {
               onClick={() => setFilterStatus(s)}
               className="btn"
               style={{
-                backgroundColor: filterStatus === s ? '#0f766e' : '#f1f5f9',
-                color: filterStatus === s ? 'white' : '#64748b',
-                padding: '8px 14px', fontSize: '12px'
+                backgroundColor: filterStatus === s ? '#2D6B6B' : '#F2EDE4',
+                color: filterStatus === s ? 'white' : '#8C7E72',
+                padding: '8px 14px', fontSize: '12px',
+                border: filterStatus === s ? 'none' : '1px solid #E2D9CE'
               }}
             >
               {s}
             </button>
           ))}
         </div>
-        <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#64748b' }}>
+        <span style={{ marginLeft: 'auto', fontSize: '13px', color: '#8C7E72' }}>
           {filtered.length} slot(s) found
         </span>
       </div>
 
       {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#8C7E72' }}>
           Loading slots...
         </div>
       )}
@@ -285,12 +284,12 @@ const ManageSlots = () => {
       {!loading && filtered.length === 0 && (
         <div style={{
           textAlign: 'center', padding: '3rem',
-          backgroundColor: 'white', borderRadius: '12px', color: '#64748b'
+          backgroundColor: 'white', borderRadius: '12px',
+          color: '#8C7E72', border: '1px solid #E2D9CE'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🕐</div>
-          <p style={{ fontSize: '16px', fontWeight: '600' }}>No slots found</p>
+          <p style={{ fontSize: '16px', fontWeight: '600', color: '#2C2825' }}>No slots found</p>
           <p style={{ fontSize: '13px', marginTop: '4px' }}>
-            Click "Add New Slot" to create your first availability slot
+            Click "+ Add New Slot" to create your first availability slot
           </p>
         </div>
       )}
@@ -299,15 +298,15 @@ const ManageSlots = () => {
       {!loading && Object.keys(grouped).map(date => (
         <div key={date} style={{ marginBottom: '1.5rem' }}>
           <div style={{
-            backgroundColor: '#0f766e', color: 'white',
-            padding: '8px 16px', borderRadius: '8px 8px 0 0',
+            backgroundColor: '#2D6B6B', color: 'white',
+            padding: '10px 16px', borderRadius: '8px 8px 0 0',
             fontSize: '14px', fontWeight: '700'
           }}>
-            📅 {formatDate(date)} — {grouped[date].length} slot(s)
+            {formatDate(date)} — {grouped[date].length} slot(s)
           </div>
-          <div style={{
+          <div className="table-wrap" style={{
             backgroundColor: 'white',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #E2D9CE',
             borderTop: 'none',
             borderRadius: '0 0 8px 8px',
             overflow: 'hidden'
@@ -331,7 +330,7 @@ const ManageSlots = () => {
                     <td style={{ fontWeight: '600' }}>{slot.startTime}</td>
                     <td>{slot.endTime}</td>
                     <td>{slot.durationMinutes} min</td>
-                    <td style={{ fontSize: '12px', color: '#64748b' }}>
+                    <td style={{ fontSize: '12px', color: '#8C7E72' }}>
                       {slot.recurrence || 'NONE'}
                     </td>
                     <td>
@@ -344,25 +343,25 @@ const ManageSlots = () => {
                         {slot.status === 'BLOCKED' && (
                           <button
                             className="btn btn-success"
-                            style={{ padding: '5px 10px', fontSize: '11px' }}
+                            style={{ padding: '5px 10px', fontSize: '11px', fontWeight: '600' }}
                             onClick={() => handleRelease(slot.slotId)}
                             disabled={actioningId === slot.slotId}
                           >
-                            🔓 Release
+                            Release
                           </button>
                         )}
                         {(slot.status === 'AVAILABLE' || slot.status === 'BLOCKED') && (
                           <button
                             className="btn btn-danger"
-                            style={{ padding: '5px 10px', fontSize: '11px' }}
+                            style={{ padding: '5px 10px', fontSize: '11px', fontWeight: '600' }}
                             onClick={() => handleDelete(slot.slotId)}
                             disabled={actioningId === slot.slotId}
                           >
-                            {actioningId === slot.slotId ? '...' : '🗑️ Delete'}
+                            {actioningId === slot.slotId ? '...' : 'Delete'}
                           </button>
                         )}
                         {slot.status === 'BOOKED' && (
-                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                          <span style={{ fontSize: '12px', color: '#8C7E72' }}>
                             Booked
                           </span>
                         )}

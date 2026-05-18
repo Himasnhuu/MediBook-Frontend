@@ -109,10 +109,10 @@ const ManageProviders = () => {
     <div>
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#2C2825' }}>
           Manage Providers
         </h2>
-        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+        <p style={{ color: '#8C7E72', fontSize: '14px', marginTop: '4px' }}>
           Verify and manage healthcare providers on the platform
         </p>
       </div>
@@ -125,19 +125,19 @@ const ManageProviders = () => {
           gap: '1rem', marginBottom: '1.5rem'
         }}>
           {[
-            { label: 'Total',           value: providers.length,  color: '#1e293b', bg: '#f8fafc', border: '#e2e8f0' },
-            { label: 'Verified',        value: verifiedCount,     color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0' },
-            { label: 'Pending Verify',  value: pendingCount,      color: '#d97706', bg: '#fefce8', border: '#fde68a' },
-            { label: 'Pending Updates', value: pendingUpdateCount, color: '#7c3aed', bg: '#faf5ff', border: '#ddd6fe' },
+            { label: 'Total',           value: providers.length,   color: '#2C2825', bg: '#FFFFFF',  border: '#E2D9CE' },
+            { label: 'Verified',        value: verifiedCount,      color: '#3D7A5A', bg: '#EBF5EF',  border: '#B8D8C6' },
+            { label: 'Pending Verify',  value: pendingCount,       color: '#9A7230', bg: '#FDF6E8',  border: '#E8C87A' },
+            { label: 'Pending Updates', value: pendingUpdateCount, color: '#2D6B6B', bg: '#E8F4F4',  border: '#B8DADA' },
           ].map(stat => (
             <div key={stat.label} className="card" style={{
               backgroundColor: stat.bg, border: `1px solid ${stat.border}`,
-              textAlign: 'center', padding: '1rem'
+              textAlign: 'center', padding: '1.2rem 1rem'
             }}>
-              <p style={{ fontSize: '28px', fontWeight: '800', color: stat.color }}>
+              <p style={{ fontSize: '32px', fontWeight: '900', color: stat.color, letterSpacing: '-1px' }}>
                 {stat.value}
               </p>
-              <p style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: '#8C7E72', marginTop: '5px', fontWeight: '500' }}>
                 {stat.label}
               </p>
             </div>
@@ -148,22 +148,22 @@ const ManageProviders = () => {
       {/* Pending alerts */}
       {pendingCount > 0 && (
         <div style={{
-          backgroundColor: '#fefce8', border: '1px solid #fde68a',
+          backgroundColor: '#FDF6E8', border: '1px solid #E8C87A',
           borderRadius: '8px', padding: '12px 16px',
-          marginBottom: '8px', fontSize: '14px', color: '#92400e',
+          marginBottom: '8px', fontSize: '14px', color: '#7A5C1E',
           display: 'flex', alignItems: 'center', gap: '8px'
         }}>
-          ⚠️ <strong>{pendingCount} provider(s)</strong> are waiting for verification
+          <strong>{pendingCount} provider(s)</strong> are waiting for verification
         </div>
       )}
       {pendingUpdateCount > 0 && (
         <div style={{
-          backgroundColor: '#faf5ff', border: '1px solid #ddd6fe',
+          backgroundColor: '#E8F4F4', border: '1px solid #B8DADA',
           borderRadius: '8px', padding: '12px 16px',
-          marginBottom: '1.5rem', fontSize: '14px', color: '#6d28d9',
+          marginBottom: '1.5rem', fontSize: '14px', color: '#1F4E4E',
           display: 'flex', alignItems: 'center', gap: '8px'
         }}>
-          🔄 <strong>{pendingUpdateCount} provider(s)</strong> have profile updates awaiting approval
+          <strong>{pendingUpdateCount} provider(s)</strong> have profile updates awaiting approval
         </div>
       )}
 
@@ -176,8 +176,9 @@ const ManageProviders = () => {
           onChange={e => setSearch(e.target.value)}
           style={{
             flex: 1, minWidth: '240px', padding: '10px 14px',
-            border: '1px solid #cbd5e1', borderRadius: '8px',
-            fontSize: '14px', outline: 'none'
+            border: '1.5px solid #E2D9CE', borderRadius: '8px',
+            fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+            color: '#2C2825', backgroundColor: '#FAFAF8'
           }}
         />
         {['ALL', 'VERIFIED', 'PENDING'].map(f => (
@@ -186,9 +187,10 @@ const ManageProviders = () => {
             onClick={() => setFilterVerified(f)}
             className="btn"
             style={{
-              backgroundColor: filterVerified === f ? '#4338ca' : '#f1f5f9',
-              color: filterVerified === f ? 'white' : '#64748b',
-              padding: '10px 16px', fontSize: '13px'
+              backgroundColor: filterVerified === f ? '#2D6B6B' : '#F2EDE4',
+              color: filterVerified === f ? 'white' : '#8C7E72',
+              padding: '10px 20px', fontSize: '13px', fontWeight: '600',
+              border: filterVerified === f ? 'none' : '1px solid #E2D9CE'
             }}
           >
             {f}
@@ -216,12 +218,12 @@ const ManageProviders = () => {
 
       {/* Providers table */}
       {!loading && filtered.length > 0 && (
+        <div className="table-wrap">
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table>
             <thead>
               <tr>
                 <th>ID</th>
-                <th>User ID</th>
                 <th>Specialization</th>
                 <th>Qualification</th>
                 <th>Experience</th>
@@ -235,8 +237,7 @@ const ManageProviders = () => {
               {filtered.map((provider, index) => (
                 <tr key={provider.providerId}>
                   <td>#{index + 1}</td>
-                  <td>#{provider.userId}</td>
-                  <td style={{ fontWeight: '600', color: '#2563eb' }}>
+                  <td style={{ fontWeight: '600', color: '#2D6B6B' }}>
                     {provider.specialization || '—'}
                   </td>
                   <td>{provider.qualification || '—'}</td>
@@ -244,13 +245,13 @@ const ManageProviders = () => {
                   <td style={{ fontSize: '13px' }}>{provider.clinicName || '—'}</td>
                   <td>⭐ {provider.avgRating?.toFixed(1) || '0.0'}</td>
                   <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
                       <span className={`badge ${provider.isVerified ? 'badge-success' : 'badge-warning'}`}>
-                        {provider.isVerified ? '✓ Verified' : '⏳ Pending'}
+                        {provider.isVerified ? 'Verified' : 'Pending'}
                       </span>
                       {provider.hasPendingChanges && (
                         <span className="badge badge-warning">
-                          🔄 Update Pending
+                          Update Pending
                         </span>
                       )}
                     </div>
@@ -260,22 +261,22 @@ const ManageProviders = () => {
                       <button
                         onClick={() => { setViewProvider(provider); setShowViewModal(true); }}
                         style={{
-                          padding: '6px 14px', fontSize: '12px', fontWeight: '600',
+                          padding: '6px 16px', fontSize: '12px', fontWeight: '600',
                           backgroundColor: '#E8F4F4', color: '#2D6B6B',
                           border: '1px solid #2D6B6B', borderRadius: '6px',
                           cursor: 'pointer', fontFamily: 'inherit'
                         }}
                       >
-                        👁 View
+                        View
                       </button>
                       {!provider.isVerified && !provider.hasPendingChanges && (
                         <button
                           className="btn btn-success"
-                          style={{ padding: '6px 10px', fontSize: '11px' }}
+                          style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600' }}
                           onClick={() => handleVerify(provider.providerId)}
                           disabled={verifyingId === provider.providerId}
                         >
-                          {verifyingId === provider.providerId ? '...' : '✓ Verify'}
+                          {verifyingId === provider.providerId ? 'Verifying...' : 'Verify'}
                         </button>
                       )}
                       {provider.hasPendingChanges && (
@@ -283,43 +284,40 @@ const ManageProviders = () => {
                           <button
                             onClick={() => setShowChangesModal(provider)}
                             style={{
-                              padding: '6px 14px', fontSize: '12px', fontWeight: '600',
-                              backgroundColor: '#FFF8E8', color: '#C9963F',
-                              border: '1px solid #C9963F', borderRadius: '6px',
+                              padding: '6px 16px', fontSize: '12px', fontWeight: '600',
+                              backgroundColor: '#FDF6E8', color: '#9A7230',
+                              border: '1px solid #E8C87A', borderRadius: '6px',
                               cursor: 'pointer', fontFamily: 'inherit'
                             }}
                           >
-                            📋 See Changes
+                            Changes
                           </button>
                           <button
                             className="btn btn-success"
-                            style={{ padding: '6px 10px', fontSize: '11px' }}
+                            style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600' }}
                             onClick={() => handleApproveUpdate(provider.providerId)}
                             disabled={actioningUpdateId === provider.providerId}
                           >
-                            ✓ Approve
+                            {actioningUpdateId === provider.providerId ? '...' : 'Approve'}
                           </button>
                           <button
-                            className="btn btn-warning"
-                            style={{ padding: '6px 10px', fontSize: '11px' }}
+                            className="btn btn-danger"
+                            style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600' }}
                             onClick={() => handleRejectUpdate(provider.providerId)}
                             disabled={actioningUpdateId === provider.providerId}
                           >
-                            ✕ Reject
+                            {actioningUpdateId === provider.providerId ? '...' : 'Reject'}
                           </button>
                         </>
-                      )}
-                      {provider.isVerified && !provider.hasPendingChanges && (
-                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>Verified ✓</span>
                       )}
                       {!provider.isVerified && !provider.hasPendingChanges && (
                         <button
                           className="btn btn-danger"
-                          style={{ padding: '6px 10px', fontSize: '11px' }}
+                          style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '600' }}
                           onClick={() => handleDelete(provider.providerId)}
                           disabled={deletingId === provider.providerId}
                         >
-                          {deletingId === provider.providerId ? '...' : '🗑️'}
+                          {deletingId === provider.providerId ? 'Deleting...' : 'Delete'}
                         </button>
                       )}
                     </div>
@@ -328,6 +326,7 @@ const ManageProviders = () => {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
       {/* ── VIEW PROVIDER PROFILE MODAL ── */}

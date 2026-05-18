@@ -18,10 +18,8 @@ const PatientAppointments = () => {
   const patientId = localStorage.getItem('userId');
   const today = new Date().toISOString().split('T')[0];
 
-  // Tab
   const [activeTab, setActiveTab] = useState('list');
 
-  // My appointments
   const [appointments, setAppointments] = useState([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -30,7 +28,6 @@ const PatientAppointments = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedIds, setReviewedIds] = useState(new Set());
 
-  // Booking flow state
   const [step, setStep] = useState(0);
   const [specializations, setSpecializations] = useState([]);
   const [selectedSpec, setSelectedSpec] = useState(null);
@@ -41,9 +38,8 @@ const PatientAppointments = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [confirmed, setConfirmed] = useState(null); // holds confirmed appointment
+  const [confirmed, setConfirmed] = useState(null);
 
-  // Booking form
   const [form, setForm] = useState({
     serviceType: '',
     modeOfConsultation: 'IN_PERSON',
@@ -115,7 +111,6 @@ const PatientAppointments = () => {
     setSelectedSlot(null);
     setSelectedDate('');
     setStep(2);
-    // Auto load all upcoming slots
     fetchAllSlots(doctor.providerId);
   };
 
@@ -165,7 +160,7 @@ const PatientAppointments = () => {
         isVisible: true,
         createdAt: new Date().toISOString()
       });
-      toast.success('Review submitted! Thank you 🌟');
+      toast.success('Review submitted! Thank you.');
       setShowReviewModal(false);
       setReviewedIds(prev => new Set([...prev, reviewAppointment.appointmentId]));
     } catch (err) {
@@ -200,27 +195,22 @@ const PatientAppointments = () => {
     }
     setBookingLoading(true);
     try {
-      // Step 1 — Book the slot
-      await bookSlot(selectedSlot.slotId);
-
-      // Step 2 — Create appointment
-      const appointment = await bookAppointment({
-        patientId: parseInt(patientId),
-        providerId: selectedDoctor.providerId,
-        slotId: selectedSlot.slotId,
-        serviceType: form.serviceType,
-        appointmentDate: selectedSlot.date,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-        modeOfConsultation: form.modeOfConsultation,
-        notes: form.notes,
-        status: 'SCHEDULED'
-      });
-
       const fee = selectedDoctor.consultationFee || 0;
 
-      // Step 3 — If cash, skip Razorpay
       if (form.paymentMode === 'CASH') {
+        await bookSlot(selectedSlot.slotId);
+        const appointment = await bookAppointment({
+          patientId: parseInt(patientId),
+          providerId: selectedDoctor.providerId,
+          slotId: selectedSlot.slotId,
+          serviceType: form.serviceType,
+          appointmentDate: selectedSlot.date,
+          startTime: selectedSlot.startTime,
+          endTime: selectedSlot.endTime,
+          modeOfConsultation: form.modeOfConsultation,
+          notes: form.notes,
+          status: 'SCHEDULED'
+        });
         await processPayment({
           appointmentId: appointment.appointmentId,
           patientId: parseInt(patientId),
@@ -246,15 +236,14 @@ const PatientAppointments = () => {
         setConfirmed(appointment);
         setStep(4);
         fetchAppointments();
-        toast.success('Appointment booked! 🎉');
+        toast.success('Appointment booked successfully!');
         setBookingLoading(false);
         return;
       }
 
-      // Step 4 — Create Razorpay order
-      const order = await createRazorpayOrder(fee, appointment.appointmentId);
+      // For online payment — create order first, book appointment ONLY after payment
+      const order = await createRazorpayOrder(fee, 0);
 
-      // Step 5 — Open Razorpay checkout
       const options = {
         key: order.keyId,
         amount: order.amount,
@@ -268,14 +257,27 @@ const PatientAppointments = () => {
         theme: { color: '#2D6B6B' },
         handler: async (response) => {
           try {
-            // Step 6 — Verify payment
             await verifyRazorpayPayment({
               razorpayOrderId:   response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature
             });
 
-            // Step 7 — Save payment in our DB
+            // Book slot and appointment AFTER successful payment
+            await bookSlot(selectedSlot.slotId);
+            const appointment = await bookAppointment({
+              patientId: parseInt(patientId),
+              providerId: selectedDoctor.providerId,
+              slotId: selectedSlot.slotId,
+              serviceType: form.serviceType,
+              appointmentDate: selectedSlot.date,
+              startTime: selectedSlot.startTime,
+              endTime: selectedSlot.endTime,
+              modeOfConsultation: form.modeOfConsultation,
+              notes: form.notes,
+              status: 'SCHEDULED'
+            });
+
             await processPayment({
               appointmentId: appointment.appointmentId,
               patientId: parseInt(patientId),
@@ -302,7 +304,7 @@ const PatientAppointments = () => {
             setConfirmed(appointment);
             setStep(4);
             fetchAppointments();
-            toast.success('Payment successful! Appointment confirmed 🎉');
+            toast.success('Payment successful! Appointment confirmed.');
           } catch (err) {
             toast.error('Payment verification failed');
           }
@@ -316,7 +318,6 @@ const PatientAppointments = () => {
         }
       };
 
-      // Load Razorpay script and open
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => {
@@ -347,7 +348,6 @@ const PatientAppointments = () => {
     return map[status] || 'badge-info';
   };
 
-  // Group slots by date for display
   const slotsByDate = slots.reduce((acc, slot) => {
     if (!acc[slot.date]) acc[slot.date] = [];
     acc[slot.date].push(slot);
@@ -363,7 +363,7 @@ const PatientAppointments = () => {
   return (
     <div>
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b' }}>Appointments</h2>
+        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#2C2825' }}>Appointments</h2>
       </div>
 
       {/* Tabs */}
@@ -372,11 +372,12 @@ const PatientAppointments = () => {
           <button key={tab} onClick={() => { setActiveTab(tab); if (tab === 'book') resetBooking(); }}
             className="btn"
             style={{
-              backgroundColor: activeTab === tab ? '#2563eb' : '#f1f5f9',
-              color: activeTab === tab ? 'white' : '#64748b',
-              padding: '10px 24px'
+              backgroundColor: activeTab === tab ? '#2D6B6B' : '#F2EDE4',
+              color: activeTab === tab ? 'white' : '#8C7E72',
+              padding: '10px 24px',
+              border: activeTab === tab ? 'none' : '1px solid #E2D9CE'
             }}>
-            {tab === 'list' ? '📋 My Appointments' : '➕ Book New'}
+            {tab === 'list' ? 'My Appointments' : '+ Book New'}
           </button>
         ))}
       </div>
@@ -385,12 +386,16 @@ const PatientAppointments = () => {
       {activeTab === 'list' && (
         <div>
           {loadingAppointments && (
-            <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>Loading...</div>
+            <div style={{ textAlign: 'center', padding: '3rem', color: '#8C7E72' }}>Loading...</div>
           )}
           {!loadingAppointments && appointments.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: 'white', borderRadius: '12px', color: '#64748b' }}>
-              No appointments yet.{' '}
-              <button className="btn btn-primary" style={{ marginLeft: '8px', padding: '8px 16px' }}
+            <div style={{
+              textAlign: 'center', padding: '3rem',
+              backgroundColor: 'white', borderRadius: '12px',
+              color: '#8C7E72', border: '1px solid #E2D9CE'
+            }}>
+              <p style={{ fontWeight: '600', color: '#2C2825', marginBottom: '1rem' }}>No appointments yet.</p>
+              <button className="btn btn-primary" style={{ padding: '8px 16px' }}
                 onClick={() => setActiveTab('book')}>
                 Book your first appointment
               </button>
@@ -427,16 +432,16 @@ const PatientAppointments = () => {
                           )}
                           {appt.status === 'COMPLETED' && (
                             reviewedIds.has(appt.appointmentId) ? (
-                              <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: '600' }}>
-                                ✅ Reviewed
+                              <span style={{ fontSize: '12px', color: '#3D7A5A', fontWeight: '600' }}>
+                                Reviewed
                               </span>
                             ) : (
                               <button
                                 className="btn"
                                 style={{
                                   padding: '6px 12px', fontSize: '12px',
-                                  backgroundColor: '#fef9c3', color: '#92400e',
-                                  border: '1px solid #fde68a'
+                                  backgroundColor: '#FDF6E8', color: '#9A7230',
+                                  border: '1px solid #E8C87A'
                                 }}
                                 onClick={() => {
                                   setReviewAppointment(appt);
@@ -444,7 +449,7 @@ const PatientAppointments = () => {
                                   setShowReviewModal(true);
                                 }}
                               >
-                                ⭐ Write Review
+                                Write Review
                               </button>
                             )
                           )}
@@ -463,15 +468,15 @@ const PatientAppointments = () => {
       {activeTab === 'book' && (
         <div>
 
-          {/* Stepper — only show for steps 0-3 */}
+          {/* Stepper */}
           {step < 4 && (
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '8px' }}>
               {STEPS.map((label, index) => (
                 <div key={index} style={{ display: 'flex', alignItems: 'center' }}>
                   <div style={{
                     width: '32px', height: '32px', borderRadius: '50%',
-                    backgroundColor: index <= step ? '#2563eb' : '#e2e8f0',
-                    color: index <= step ? 'white' : '#94a3b8',
+                    backgroundColor: index <= step ? '#2D6B6B' : '#E2D9CE',
+                    color: index <= step ? 'white' : '#8C7E72',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontWeight: '700', fontSize: '14px', flexShrink: 0
                   }}>
@@ -479,7 +484,7 @@ const PatientAppointments = () => {
                   </div>
                   <span style={{
                     marginLeft: '6px', fontSize: '13px',
-                    color: index <= step ? '#2563eb' : '#94a3b8',
+                    color: index <= step ? '#2D6B6B' : '#8C7E72',
                     fontWeight: index === step ? '600' : '400'
                   }}>
                     {label}
@@ -487,7 +492,7 @@ const PatientAppointments = () => {
                   {index < STEPS.length - 1 && (
                     <div style={{
                       width: '32px', height: '2px',
-                      backgroundColor: index < step ? '#2563eb' : '#e2e8f0',
+                      backgroundColor: index < step ? '#2D6B6B' : '#E2D9CE',
                       margin: '0 10px'
                     }} />
                   )}
@@ -499,14 +504,14 @@ const PatientAppointments = () => {
           {/* ── STEP 0: Select Specialization ── */}
           {step === 0 && (
             <div className="card">
-              <h3 style={{ marginBottom: '0.5rem', color: '#1e293b', fontSize: '18px' }}>
+              <h3 style={{ marginBottom: '0.5rem', color: '#2C2825', fontSize: '18px' }}>
                 Select a Specialization
               </h3>
-              <p style={{ color: '#64748b', fontSize: '13px', marginBottom: '1.5rem' }}>
+              <p style={{ color: '#8C7E72', fontSize: '13px', marginBottom: '1.5rem' }}>
                 Choose the type of doctor you need
               </p>
               {specializations.length === 0 && (
-                <p style={{ color: '#94a3b8' }}>No specializations available. Please contact admin.</p>
+                <p style={{ color: '#8C7E72' }}>No specializations available. Please contact admin.</p>
               )}
               <div style={{
                 display: 'grid',
@@ -518,22 +523,21 @@ const PatientAppointments = () => {
                     key={spec.id}
                     onClick={() => handleSelectSpec(spec)}
                     style={{
-                      border: '2px solid #e2e8f0', borderRadius: '12px',
-                      padding: '1.2rem', cursor: 'pointer',
+                      border: '2px solid #E2D9CE', borderRadius: '12px',
+                      padding: '1.5rem 1.2rem', cursor: 'pointer',
                       textAlign: 'center', transition: 'all 0.15s',
                       backgroundColor: 'white'
                     }}
                     onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = '#2563eb';
-                      e.currentTarget.style.backgroundColor = '#eff6ff';
+                      e.currentTarget.style.borderColor = '#2D6B6B';
+                      e.currentTarget.style.backgroundColor = '#E8F4F4';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.borderColor = '#E2D9CE';
                       e.currentTarget.style.backgroundColor = 'white';
                     }}
                   >
-                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>🏥</div>
-                    <p style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>
+                    <p style={{ fontWeight: '700', color: '#2C2825', fontSize: '14px' }}>
                       {spec.name}
                     </p>
                   </div>
@@ -547,15 +551,15 @@ const PatientAppointments = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
                 <button className="btn"
-                  style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '8px 12px' }}
+                  style={{ backgroundColor: '#F2EDE4', color: '#8C7E72', padding: '8px 12px', border: '1px solid #E2D9CE' }}
                   onClick={() => { setStep(0); setSelectedSpec(null); setDoctors([]); }}>
-                  ← Back
+                  Back
                 </button>
                 <div>
-                  <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: '700' }}>
+                  <h3 style={{ color: '#2C2825', fontSize: '18px', fontWeight: '700' }}>
                     {selectedSpec?.name} Doctors
                   </h3>
-                  <p style={{ color: '#64748b', fontSize: '13px' }}>
+                  <p style={{ color: '#8C7E72', fontSize: '13px' }}>
                     {doctors.length} doctor(s) available
                   </p>
                 </div>
@@ -564,10 +568,16 @@ const PatientAppointments = () => {
               {doctors.length === 0 && (
                 <div style={{
                   textAlign: 'center', padding: '3rem',
-                  backgroundColor: 'white', borderRadius: '12px', color: '#64748b'
+                  backgroundColor: 'white', borderRadius: '12px',
+                  color: '#8C7E72', border: '1px solid #E2D9CE'
                 }}>
-                  <div style={{ fontSize: '48px', marginBottom: '12px' }}>👨‍⚕️</div>
-                  <p style={{ fontWeight: '600' }}>No doctors available for {selectedSpec?.name}</p>
+                  <div style={{ marginBottom: '12px' }}>
+                    <svg width="64" height="72" viewBox="0 0 130 150" style={{ opacity: 0.3 }}>
+                      <circle cx="65" cy="48" r="30" fill="#2D6B6B"/>
+                      <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="#2D6B6B"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontWeight: '600', color: '#2C2825' }}>No doctors available for {selectedSpec?.name}</p>
                   <p style={{ fontSize: '13px', marginTop: '4px' }}>Try a different specialization</p>
                 </div>
               )}
@@ -578,21 +588,20 @@ const PatientAppointments = () => {
                     key={doctor.providerId}
                     className="card"
                     style={{
-                      border: '2px solid #e2e8f0', cursor: 'pointer',
+                      border: '2px solid #E2D9CE', cursor: 'pointer',
                       transition: 'all 0.15s', display: 'flex',
                       alignItems: 'center', gap: '1rem'
                     }}
                     onClick={() => handleSelectDoctor(doctor)}
                     onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = '#2563eb';
-                      e.currentTarget.style.backgroundColor = '#f8fbff';
+                      e.currentTarget.style.borderColor = '#2D6B6B';
+                      e.currentTarget.style.backgroundColor = '#F8FBF8';
                     }}
                     onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = '#e2e8f0';
+                      e.currentTarget.style.borderColor = '#E2D9CE';
                       e.currentTarget.style.backgroundColor = 'white';
                     }}
                   >
-                    {/* Avatar */}
                     <div style={{
                       width: '64px', height: '64px', borderRadius: '50%',
                       overflow: 'hidden', border: '2px solid #2D6B6B',
@@ -607,37 +616,34 @@ const PatientAppointments = () => {
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : (
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                          stroke="#2D6B6B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                          <circle cx="12" cy="7" r="4"/>
+                        <svg width="34" height="38" viewBox="0 0 130 150">
+                          <circle cx="65" cy="48" r="30" fill="rgba(45,107,107,0.6)"/>
+                          <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(45,107,107,0.6)"/>
                         </svg>
                       )}
                     </div>
 
-                    {/* Info */}
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#1e293b', marginBottom: '2px' }}>
+                      <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#2C2825', marginBottom: '2px' }}>
                         Dr. {doctor.doctorName || `Provider #${doctor.providerId}`}
                       </h3>
-                      <p style={{ color: '#2563eb', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>
+                      <p style={{ color: '#2D6B6B', fontSize: '13px', fontWeight: '600', marginBottom: '4px' }}>
                         {doctor.specialization}
                       </p>
-                      <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#64748b', flexWrap: 'wrap' }}>
-                        {doctor.clinicName && <span>🏥 {doctor.clinicName}</span>}
-                        {doctor.clinicAddress && <span>📍 {doctor.clinicAddress}</span>}
-                        {doctor.experienceYears > 0 && <span>💼 {doctor.experienceYears} yrs exp</span>}
-                        <span>🎓 {doctor.qualification || 'MBBS'}</span>
+                      <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#5C524A', flexWrap: 'wrap' }}>
+                        {doctor.clinicName && <span>{doctor.clinicName}</span>}
+                        {doctor.clinicAddress && <span>{doctor.clinicAddress}</span>}
+                        {doctor.experienceYears > 0 && <span>{doctor.experienceYears} yrs exp</span>}
+                        <span>{doctor.qualification || 'MBBS'}</span>
                       </div>
                     </div>
 
-                    {/* Fee + arrow */}
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <p style={{ fontSize: '20px', fontWeight: '800', color: '#16a34a' }}>
+                      <p style={{ fontSize: '20px', fontWeight: '800', color: '#3D7A5A' }}>
                         ₹{doctor.consultationFee || 0}
                       </p>
-                      <p style={{ fontSize: '11px', color: '#94a3b8' }}>consultation fee</p>
-                      <p style={{ fontSize: '20px', color: '#2563eb', marginTop: '4px' }}>›</p>
+                      <p style={{ fontSize: '11px', color: '#8C7E72' }}>consultation fee</p>
+                      <p style={{ fontSize: '20px', color: '#2D6B6B', marginTop: '4px' }}>›</p>
                     </div>
                   </div>
                 ))}
@@ -650,15 +656,15 @@ const PatientAppointments = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
                 <button className="btn"
-                  style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '8px 12px' }}
+                  style={{ backgroundColor: '#F2EDE4', color: '#8C7E72', padding: '8px 12px', border: '1px solid #E2D9CE' }}
                   onClick={() => { setStep(1); setSelectedDoctor(null); setSlots([]); }}>
-                  ← Back
+                  Back
                 </button>
                 <div>
-                  <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: '700' }}>
+                  <h3 style={{ color: '#2C2825', fontSize: '18px', fontWeight: '700' }}>
                     Dr. {selectedDoctor?.doctorName || `Provider #${selectedDoctor?.providerId}`}
                   </h3>
-                  <p style={{ color: '#64748b', fontSize: '13px' }}>
+                  <p style={{ color: '#8C7E72', fontSize: '13px' }}>
                     {selectedDoctor?.specialization} · {selectedDoctor?.clinicName}
                   </p>
                 </div>
@@ -666,28 +672,28 @@ const PatientAppointments = () => {
 
               {/* Doctor summary card */}
               <div style={{
-                backgroundColor: '#f0f9ff', border: '1px solid #bae6fd',
+                backgroundColor: '#E8F4F4', border: '1px solid #B8DADA',
                 borderRadius: '10px', padding: '1rem', marginBottom: '1.5rem',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 flexWrap: 'wrap', gap: '8px'
               }}>
-                <div style={{ fontSize: '13px', color: '#0369a1' }}>
-                  <span>🎓 {selectedDoctor?.qualification}</span>
-                  <span style={{ margin: '0 12px' }}>💼 {selectedDoctor?.experienceYears} yrs exp</span>
-                  <span>📍 {selectedDoctor?.clinicAddress}</span>
+                <div style={{ fontSize: '13px', color: '#2D6B6B' }}>
+                  <span>{selectedDoctor?.qualification}</span>
+                  <span style={{ margin: '0 12px' }}>{selectedDoctor?.experienceYears} yrs exp</span>
+                  <span>{selectedDoctor?.clinicAddress}</span>
                 </div>
-                <span style={{ fontSize: '20px', fontWeight: '800', color: '#16a34a' }}>
+                <span style={{ fontSize: '20px', fontWeight: '800', color: '#3D7A5A' }}>
                   ₹{selectedDoctor?.consultationFee || 0}
                 </span>
               </div>
 
               {/* Filter by date */}
               <div style={{
-                backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
+                backgroundColor: '#FAF7F2', border: '1px solid #E2D9CE',
                 borderRadius: '10px', padding: '1rem', marginBottom: '1.2rem'
               }}>
-                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px', fontWeight: '600' }}>
-                  🔍 Filter by date:
+                <p style={{ fontSize: '13px', color: '#8C7E72', marginBottom: '10px', fontWeight: '600' }}>
+                  Filter by date:
                 </p>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                   <input
@@ -695,18 +701,19 @@ const PatientAppointments = () => {
                     onChange={e => setSelectedDate(e.target.value)}
                     style={{
                       flex: 1, padding: '10px 12px',
-                      border: '1px solid #cbd5e1', borderRadius: '8px',
-                      fontSize: '14px', outline: 'none'
+                      border: '1.5px solid #E2D9CE', borderRadius: '8px',
+                      fontSize: '14px', outline: 'none', fontFamily: 'inherit',
+                      backgroundColor: '#FAFAF8'
                     }}
                   />
                   <button className="btn btn-primary"
                     style={{ padding: '10px 20px', whiteSpace: 'nowrap' }}
                     onClick={fetchSlotsByDate}
                     disabled={!selectedDate || loadingSlots}>
-                    🔍 Check
+                    Check
                   </button>
                   <button className="btn"
-                    style={{ padding: '10px 14px', backgroundColor: '#f1f5f9', color: '#64748b', whiteSpace: 'nowrap' }}
+                    style={{ padding: '10px 14px', backgroundColor: '#F2EDE4', color: '#8C7E72', whiteSpace: 'nowrap', border: '1px solid #E2D9CE' }}
                     onClick={() => { setSelectedDate(''); fetchAllSlots(selectedDoctor.providerId); }}
                     disabled={loadingSlots}>
                     Show All
@@ -715,7 +722,7 @@ const PatientAppointments = () => {
               </div>
 
               {loadingSlots && (
-                <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#8C7E72' }}>
                   Loading slots...
                 </div>
               )}
@@ -723,7 +730,8 @@ const PatientAppointments = () => {
               {!loadingSlots && slots.length === 0 && (
                 <div style={{
                   textAlign: 'center', padding: '2rem',
-                  backgroundColor: 'white', borderRadius: '10px', color: '#64748b'
+                  backgroundColor: 'white', borderRadius: '10px',
+                  color: '#8C7E72', border: '1px solid #E2D9CE'
                 }}>
                   No available slots. Try a different date.
                 </div>
@@ -733,12 +741,12 @@ const PatientAppointments = () => {
               {!loadingSlots && Object.keys(slotsByDate).map(date => (
                 <div key={date} style={{ marginBottom: '1.2rem' }}>
                   <p style={{
-                    fontSize: '13px', fontWeight: '700', color: '#475569',
+                    fontSize: '13px', fontWeight: '700', color: '#5C524A',
                     marginBottom: '8px', padding: '6px 12px',
-                    backgroundColor: '#f1f5f9', borderRadius: '6px',
-                    display: 'inline-block'
+                    backgroundColor: '#F2EDE4', borderRadius: '6px',
+                    display: 'inline-block', border: '1px solid #E2D9CE'
                   }}>
-                    📅 {formatDate(date)}
+                    {formatDate(date)}
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                     {slotsByDate[date].map(slot => {
@@ -750,11 +758,12 @@ const PatientAppointments = () => {
                           style={{
                             padding: '10px 16px', borderRadius: '8px',
                             border: '2px solid',
-                            borderColor: isSelected ? '#2563eb' : '#e2e8f0',
-                            backgroundColor: isSelected ? '#2563eb' : 'white',
-                            color: isSelected ? 'white' : '#475569',
+                            borderColor: isSelected ? '#2D6B6B' : '#E2D9CE',
+                            backgroundColor: isSelected ? '#2D6B6B' : 'white',
+                            color: isSelected ? 'white' : '#5C524A',
                             fontWeight: '600', fontSize: '13px',
-                            cursor: 'pointer', transition: 'all 0.15s'
+                            cursor: 'pointer', transition: 'all 0.15s',
+                            fontFamily: 'inherit'
                           }}
                         >
                           {slot.startTime} - {slot.endTime}
@@ -768,17 +777,17 @@ const PatientAppointments = () => {
               {selectedSlot && (
                 <div style={{
                   marginTop: '1.5rem', padding: '12px 16px',
-                  backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0',
+                  backgroundColor: '#EBF5EF', border: '1px solid #B8D8C6',
                   borderRadius: '8px', display: 'flex',
                   justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                  <span style={{ fontSize: '14px', color: '#16a34a', fontWeight: '600' }}>
-                    ✅ Selected: {formatDate(selectedSlot.date)} · {selectedSlot.startTime} - {selectedSlot.endTime}
+                  <span style={{ fontSize: '14px', color: '#3D7A5A', fontWeight: '600' }}>
+                    Selected: {formatDate(selectedSlot.date)} · {selectedSlot.startTime} - {selectedSlot.endTime}
                   </span>
                   <button className="btn btn-primary"
                     style={{ padding: '10px 24px' }}
                     onClick={() => setStep(3)}>
-                    Continue →
+                    Continue
                   </button>
                 </div>
               )}
@@ -790,33 +799,33 @@ const PatientAppointments = () => {
             <div className="card" style={{ maxWidth: '600px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
                 <button className="btn"
-                  style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '8px 12px' }}
+                  style={{ backgroundColor: '#F2EDE4', color: '#8C7E72', padding: '8px 12px', border: '1px solid #E2D9CE' }}
                   onClick={() => setStep(2)}>
-                  ← Back
+                  Back
                 </button>
-                <h3 style={{ color: '#1e293b', fontSize: '18px', fontWeight: '700' }}>
+                <h3 style={{ color: '#2C2825', fontSize: '18px', fontWeight: '700' }}>
                   Review & Confirm
                 </h3>
               </div>
 
               {/* Booking summary */}
               <div style={{
-                backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
+                backgroundColor: '#FAF7F2', border: '1px solid #E2D9CE',
                 borderRadius: '10px', padding: '1rem', marginBottom: '1.5rem'
               }}>
-                <p style={{ fontWeight: '700', color: '#1e293b', marginBottom: '10px', fontSize: '15px' }}>
-                  📋 Booking Summary
+                <p style={{ fontWeight: '700', color: '#2C2825', marginBottom: '10px', fontSize: '15px' }}>
+                  Booking Summary
                 </p>
-                <div style={{ fontSize: '14px', color: '#475569' }}>
+                <div style={{ fontSize: '14px', color: '#5C524A' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span>Doctor</span>
-                    <span style={{ fontWeight: '600', color: '#1e293b' }}>
+                    <span style={{ fontWeight: '600', color: '#2C2825' }}>
                       Dr. {selectedDoctor?.doctorName || `#${selectedDoctor?.providerId}`}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span>Specialization</span>
-                    <span style={{ fontWeight: '600', color: '#2563eb' }}>{selectedDoctor?.specialization}</span>
+                    <span style={{ fontWeight: '600', color: '#2D6B6B' }}>{selectedDoctor?.specialization}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span>Clinic</span>
@@ -833,10 +842,10 @@ const PatientAppointments = () => {
                   <div style={{
                     display: 'flex', justifyContent: 'space-between',
                     marginTop: '10px', paddingTop: '10px',
-                    borderTop: '1px solid #e2e8f0'
+                    borderTop: '1px solid #E2D9CE'
                   }}>
                     <span style={{ fontWeight: '700' }}>Consultation Fee</span>
-                    <span style={{ fontWeight: '800', fontSize: '18px', color: '#16a34a' }}>
+                    <span style={{ fontWeight: '800', fontSize: '18px', color: '#3D7A5A' }}>
                       ₹{selectedDoctor?.consultationFee || 0}
                     </span>
                   </div>
@@ -860,8 +869,8 @@ const PatientAppointments = () => {
                   value={form.modeOfConsultation}
                   onChange={e => setForm({ ...form, modeOfConsultation: e.target.value })}
                 >
-                  <option value="IN_PERSON">🏥 In Person</option>
-                  <option value="TELECONSULTATION">💻 Teleconsultation</option>
+                  <option value="IN_PERSON">In Person</option>
+                  <option value="TELECONSULTATION">Teleconsultation</option>
                 </select>
               </div>
 
@@ -872,11 +881,6 @@ const PatientAppointments = () => {
                   placeholder="Describe your symptoms..."
                   value={form.notes}
                   onChange={e => setForm({ ...form, notes: e.target.value })}
-                  style={{
-                    width: '100%', padding: '10px 12px',
-                    border: '1px solid #cbd5e1', borderRadius: '8px',
-                    fontSize: '14px', outline: 'none', resize: 'vertical'
-                  }}
                 />
               </div>
 
@@ -886,10 +890,10 @@ const PatientAppointments = () => {
                   value={form.paymentMode}
                   onChange={e => setForm({ ...form, paymentMode: e.target.value })}
                 >
-                  <option value="CARD">💳 Credit / Debit Card</option>
-                  <option value="UPI">📱 UPI</option>
-                  <option value="WALLET">👛 Wallet</option>
-                  <option value="CASH">💵 Cash (Pay at clinic)</option>
+                  <option value="CARD">Credit / Debit Card</option>
+                  <option value="UPI">UPI</option>
+                  <option value="WALLET">Wallet</option>
+                  <option value="CASH">Cash (Pay at clinic)</option>
                 </select>
               </div>
 
@@ -899,7 +903,7 @@ const PatientAppointments = () => {
                 onClick={handleBooking}
                 disabled={bookingLoading}
               >
-                {bookingLoading ? 'Processing...' : `✅ Confirm Booking & Pay ₹${selectedDoctor?.consultationFee || 0}`}
+                {bookingLoading ? 'Processing...' : `Confirm Booking & Pay ₹${selectedDoctor?.consultationFee || 0}`}
               </button>
             </div>
           )}
@@ -911,23 +915,26 @@ const PatientAppointments = () => {
                 {/* Success icon */}
                 <div style={{
                   width: '80px', height: '80px', borderRadius: '50%',
-                  backgroundColor: '#f0fdf4', border: '4px solid #16a34a',
+                  backgroundColor: '#EBF5EF', border: '4px solid #3D7A5A',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '36px', margin: '0 auto 1rem'
+                  margin: '0 auto 1rem'
                 }}>
-                  ✅
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+                    stroke="#3D7A5A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
                 </div>
 
-                <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#16a34a', marginBottom: '4px' }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#3D7A5A', marginBottom: '4px' }}>
                   Appointment Confirmed!
                 </h2>
-                <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '1.5rem' }}>
+                <p style={{ color: '#8C7E72', fontSize: '14px', marginBottom: '1.5rem' }}>
                   Your appointment has been booked successfully
                 </p>
 
                 {/* Details */}
                 <div style={{
-                  backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
+                  backgroundColor: '#FAF7F2', border: '1px solid #E2D9CE',
                   borderRadius: '10px', padding: '1rem', marginBottom: '1.5rem',
                   textAlign: 'left'
                 }}>
@@ -945,44 +952,43 @@ const PatientAppointments = () => {
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : (
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-                          stroke="#2D6B6B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                          <circle cx="12" cy="7" r="4"/>
+                        <svg width="26" height="30" viewBox="0 0 130 150">
+                          <circle cx="65" cy="48" r="30" fill="rgba(45,107,107,0.6)"/>
+                          <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(45,107,107,0.6)"/>
                         </svg>
                       )}
                     </div>
                     <div>
-                      <p style={{ fontWeight: '700', color: '#1e293b' }}>
+                      <p style={{ fontWeight: '700', color: '#2C2825' }}>
                         Dr. {selectedDoctor?.doctorName || `Provider #${selectedDoctor?.providerId}`}
                       </p>
-                      <p style={{ color: '#2563eb', fontSize: '13px' }}>{selectedDoctor?.specialization}</p>
+                      <p style={{ color: '#2D6B6B', fontSize: '13px' }}>{selectedDoctor?.specialization}</p>
                     </div>
                   </div>
 
-                  <div style={{ fontSize: '14px', color: '#475569' }}>
+                  <div style={{ fontSize: '14px', color: '#5C524A' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span>🏥 Clinic</span>
+                      <span>Clinic</span>
                       <span style={{ fontWeight: '600' }}>{selectedDoctor?.clinicName}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span>📅 Date</span>
+                      <span>Date</span>
                       <span style={{ fontWeight: '600' }}>{formatDate(confirmed.appointmentDate)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span>⏰ Time</span>
+                      <span>Time</span>
                       <span style={{ fontWeight: '600' }}>{confirmed.startTime} - {confirmed.endTime}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span>🔖 Booking ID</span>
-                      <span style={{ fontWeight: '600', color: '#2563eb' }}>APT{confirmed.appointmentId}</span>
+                      <span>Booking ID</span>
+                      <span style={{ fontWeight: '600', color: '#2D6B6B' }}>APT{confirmed.appointmentId}</span>
                     </div>
                     <div style={{
                       display: 'flex', justifyContent: 'space-between',
-                      paddingTop: '8px', borderTop: '1px solid #e2e8f0', marginTop: '8px'
+                      paddingTop: '8px', borderTop: '1px solid #E2D9CE', marginTop: '8px'
                     }}>
                       <span style={{ fontWeight: '700' }}>Amount Paid</span>
-                      <span style={{ fontWeight: '800', color: '#16a34a', fontSize: '16px' }}>
+                      <span style={{ fontWeight: '800', color: '#3D7A5A', fontSize: '16px' }}>
                         ₹{selectedDoctor?.consultationFee || 0}
                       </span>
                     </div>
@@ -996,14 +1002,14 @@ const PatientAppointments = () => {
                     style={{ flex: 1, padding: '12px' }}
                     onClick={() => { setActiveTab('list'); resetBooking(); }}
                   >
-                    📋 View My Appointments
+                    View My Appointments
                   </button>
                   <button
                     className="btn"
-                    style={{ flex: 1, padding: '12px', backgroundColor: '#f1f5f9', color: '#64748b' }}
+                    style={{ flex: 1, padding: '12px', backgroundColor: '#F2EDE4', color: '#8C7E72', border: '1px solid #E2D9CE' }}
                     onClick={() => { resetBooking(); }}
                   >
-                    ➕ Book Another
+                    + Book Another
                   </button>
                 </div>
               </div>
@@ -1011,108 +1017,110 @@ const PatientAppointments = () => {
           )}
         </div>
       )}
+
       {/* ── Review Modal ── */}
       {showReviewModal && reviewAppointment && (
         <div style={{
           position: 'fixed', inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.5)',
+          backgroundColor: 'rgba(26,21,17,0.6)',
           display: 'flex', alignItems: 'center',
-          justifyContent: 'center', zIndex: 1000, padding: '1rem'
+          justifyContent: 'center', zIndex: 1000, padding: '1rem',
+          backdropFilter: 'blur(4px)'
         }}>
           <div style={{
-            backgroundColor: 'white', borderRadius: '16px',
-            padding: '2rem', width: '100%', maxWidth: '480px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+            backgroundColor: '#FAF7F2', borderRadius: '20px',
+            width: '100%', maxWidth: '480px',
+            boxShadow: '0 16px 48px rgba(26,21,17,0.3)'
           }}>
             <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: '1.5rem'
+              background: 'linear-gradient(135deg, #1F4E4E, #2D6B6B)',
+              padding: '1.5rem 2rem', borderRadius: '20px 20px 0 0',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'white' }}>
                   Write a Review
                 </h3>
-                <p style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px', marginTop: '2px' }}>
                   Appointment #{reviewAppointment.appointmentId}
                 </p>
               </div>
               <button
                 onClick={() => setShowReviewModal(false)}
                 style={{
-                  background: 'none', border: 'none',
-                  fontSize: '20px', cursor: 'pointer', color: '#94a3b8'
+                  background: 'rgba(255,255,255,0.15)', border: 'none',
+                  borderRadius: '8px', width: '34px', height: '34px',
+                  color: 'white', fontSize: '16px', cursor: 'pointer'
                 }}
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
-              <p style={{
-                fontSize: '13px', fontWeight: '600',
-                color: '#475569', marginBottom: '10px'
-              }}>
-                How would you rate your experience?
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                {[1, 2, 3, 4, 5].map(star => (
-                  <button
-                    key={star}
-                    onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                    style={{
-                      background: 'none', border: 'none',
-                      fontSize: '36px', cursor: 'pointer',
-                      color: star <= reviewForm.rating ? '#f59e0b' : '#e2e8f0',
-                      transition: 'color 0.15s', padding: '0'
-                    }}
-                  >
-                    ★
-                  </button>
-                ))}
+            <div style={{ padding: '1.5rem 2rem' }}>
+              <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                <p style={{
+                  fontSize: '13px', fontWeight: '600',
+                  color: '#5C524A', marginBottom: '10px'
+                }}>
+                  How would you rate your experience?
+                </p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                      style={{
+                        background: 'none', border: 'none',
+                        fontSize: '36px', cursor: 'pointer',
+                        color: star <= reviewForm.rating ? '#C9963F' : '#E2D9CE',
+                        transition: 'color 0.15s', padding: '0'
+                      }}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <p style={{
+                  fontSize: '14px', fontWeight: '700',
+                  color: '#C9963F', marginTop: '8px'
+                }}>
+                  {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewForm.rating]}
+                </p>
               </div>
-              <p style={{
-                fontSize: '14px', fontWeight: '700',
-                color: '#f59e0b', marginTop: '8px'
-              }}>
-                {['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewForm.rating]}
-              </p>
-            </div>
 
-            <div className="form-group">
-              <label>Your Feedback (optional)</label>
-              <textarea
-                rows={4}
-                placeholder="Share your experience with this doctor..."
-                value={reviewForm.comment}
-                onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                style={{
-                  width: '100%', padding: '10px 12px',
-                  border: '1px solid #cbd5e1', borderRadius: '8px',
-                  fontSize: '14px', outline: 'none', resize: 'vertical'
-                }}
-              />
-            </div>
+              <div className="form-group">
+                <label>Your Feedback (optional)</label>
+                <textarea
+                  rows={4}
+                  placeholder="Share your experience with this doctor..."
+                  value={reviewForm.comment}
+                  onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                />
+              </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
-              <button
-                className="btn btn-primary"
-                style={{ flex: 1, padding: '12px' }}
-                onClick={handleSubmitReview}
-                disabled={submittingReview}
-              >
-                {submittingReview ? 'Submitting...' : '⭐ Submit Review'}
-              </button>
-              <button
-                className="btn"
-                style={{
-                  flex: 1, padding: '12px',
-                  backgroundColor: '#f1f5f9', color: '#64748b'
-                }}
-                onClick={() => setShowReviewModal(false)}
-                disabled={submittingReview}
-              >
-                Cancel
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '1rem' }}>
+                <button
+                  className="btn btn-primary"
+                  style={{ flex: 1, padding: '12px' }}
+                  onClick={handleSubmitReview}
+                  disabled={submittingReview}
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+                <button
+                  className="btn"
+                  style={{
+                    flex: 1, padding: '12px',
+                    backgroundColor: '#F2EDE4', color: '#8C7E72',
+                    border: '1px solid #E2D9CE'
+                  }}
+                  onClick={() => setShowReviewModal(false)}
+                  disabled={submittingReview}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

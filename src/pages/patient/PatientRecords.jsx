@@ -35,17 +35,17 @@ const PatientRecords = () => {
     <div>
       {/* Header */}
       <div style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#2C2825' }}>
           My Medical Records
         </h2>
-        <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>
+        <p style={{ color: '#8C7E72', fontSize: '14px', marginTop: '4px' }}>
           View your diagnosis, prescriptions and follow-up dates
         </p>
       </div>
 
       {/* Loading */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+        <div style={{ textAlign: 'center', padding: '3rem', color: '#8C7E72' }}>
           Loading records...
         </div>
       )}
@@ -55,10 +55,9 @@ const PatientRecords = () => {
         <div style={{
           textAlign: 'center', padding: '3rem',
           backgroundColor: 'white', borderRadius: '12px',
-          color: '#64748b'
+          color: '#8C7E72', border: '1px solid #E2D9CE'
         }}>
-          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🗂️</div>
-          <p style={{ fontSize: '16px', fontWeight: '600' }}>No medical records yet</p>
+          <p style={{ fontSize: '16px', fontWeight: '600', color: '#2C2825' }}>No medical records yet</p>
           <p style={{ fontSize: '13px', marginTop: '4px' }}>
             Records will appear here after a doctor completes your appointment
           </p>
@@ -67,10 +66,10 @@ const PatientRecords = () => {
 
       {/* Two-column layout — list + detail */}
       {!loading && records.length > 0 && (
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+        <div className="profile-grid" style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
 
           {/* Records list */}
-          <div style={{ flex: '0 0 340px' }}>
+          <div style={{ flex: '0 0 340px', minWidth: 0 }}>
             {records.map(record => (
               <div
                 key={record.recordId}
@@ -80,26 +79,26 @@ const PatientRecords = () => {
                   cursor: 'pointer', marginBottom: '10px',
                   border: '2px solid',
                   borderColor: selectedRecord?.recordId === record.recordId
-                    ? '#2563eb' : '#e2e8f0',
+                    ? '#2D6B6B' : '#E2D9CE',
                   backgroundColor: selectedRecord?.recordId === record.recordId
-                    ? '#f0f7ff' : 'white',
+                    ? '#E8F4F4' : 'white',
                   transition: 'all 0.15s'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <p style={{ fontWeight: '700', color: '#1e293b', fontSize: '14px' }}>
+                    <p style={{ fontWeight: '700', color: '#2C2825', fontSize: '14px' }}>
                       Record #{record.recordId}
                     </p>
-                    <p style={{ color: '#2563eb', fontSize: '13px', marginTop: '2px' }}>
+                    <p style={{ color: '#2D6B6B', fontSize: '13px', marginTop: '2px' }}>
                       {record.diagnosis || 'No diagnosis noted'}
                     </p>
-                    <p style={{ color: '#94a3b8', fontSize: '12px', marginTop: '4px' }}>
+                    <p style={{ color: '#8C7E72', fontSize: '12px', marginTop: '4px' }}>
                       Appointment #{record.appointmentId}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    <p style={{ fontSize: '11px', color: '#8C7E72' }}>
                       {formatDate(record.createdAt)}
                     </p>
                     {record.followUpDate && (
@@ -119,10 +118,9 @@ const PatientRecords = () => {
               <div style={{
                 textAlign: 'center', padding: '3rem',
                 backgroundColor: 'white', borderRadius: '12px',
-                color: '#94a3b8'
+                color: '#8C7E72', border: '1px solid #E2D9CE'
               }}>
-                <div style={{ fontSize: '36px', marginBottom: '8px' }}>👈</div>
-                <p>Select a record to view details</p>
+                <p>Select a record from the list to view details</p>
               </div>
             ) : (
               <div className="card">
@@ -130,13 +128,13 @@ const PatientRecords = () => {
                 <div style={{
                   display: 'flex', justifyContent: 'space-between',
                   alignItems: 'center', marginBottom: '1.5rem',
-                  paddingBottom: '1rem', borderBottom: '1px solid #e2e8f0'
+                  paddingBottom: '1rem', borderBottom: '1px solid #E2D9CE'
                 }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#2C2825' }}>
                       Record #{selectedRecord.recordId}
                     </h3>
-                    <p style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>
+                    <p style={{ color: '#8C7E72', fontSize: '13px', marginTop: '2px' }}>
                       Created on {formatDate(selectedRecord.createdAt)}
                     </p>
                   </div>
@@ -149,15 +147,15 @@ const PatientRecords = () => {
                 <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{
                     fontSize: '11px', fontWeight: '700',
-                    color: '#94a3b8', textTransform: 'uppercase',
+                    color: '#8C7E72', textTransform: 'uppercase',
                     letterSpacing: '0.8px', marginBottom: '6px'
                   }}>
                     Diagnosis
                   </p>
                   <div style={{
-                    backgroundColor: '#fef9c3', border: '1px solid #fde68a',
+                    backgroundColor: '#E8F4F4', border: '1px solid #B8DADA',
                     borderRadius: '8px', padding: '12px',
-                    fontSize: '14px', color: '#1e293b'
+                    fontSize: '14px', color: '#2C2825'
                   }}>
                     {selectedRecord.diagnosis || 'No diagnosis recorded'}
                   </div>
@@ -167,15 +165,15 @@ const PatientRecords = () => {
                 <div style={{ marginBottom: '1.5rem' }}>
                   <p style={{
                     fontSize: '11px', fontWeight: '700',
-                    color: '#94a3b8', textTransform: 'uppercase',
+                    color: '#8C7E72', textTransform: 'uppercase',
                     letterSpacing: '0.8px', marginBottom: '6px'
                   }}>
                     Prescription
                   </p>
                   <div style={{
-                    backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0',
+                    backgroundColor: '#EBF5EF', border: '1px solid #B8D8C6',
                     borderRadius: '8px', padding: '12px',
-                    fontSize: '14px', color: '#1e293b',
+                    fontSize: '14px', color: '#2C2825',
                     whiteSpace: 'pre-wrap'
                   }}>
                     {selectedRecord.prescription || 'No prescription recorded'}
@@ -187,15 +185,15 @@ const PatientRecords = () => {
                   <div style={{ marginBottom: '1.5rem' }}>
                     <p style={{
                       fontSize: '11px', fontWeight: '700',
-                      color: '#94a3b8', textTransform: 'uppercase',
+                      color: '#8C7E72', textTransform: 'uppercase',
                       letterSpacing: '0.8px', marginBottom: '6px'
                     }}>
                       Doctor's Notes
                     </p>
                     <div style={{
-                      backgroundColor: '#f8fafc', border: '1px solid #e2e8f0',
+                      backgroundColor: '#FAF7F2', border: '1px solid #E2D9CE',
                       borderRadius: '8px', padding: '12px',
-                      fontSize: '14px', color: '#1e293b',
+                      fontSize: '14px', color: '#2C2825',
                       whiteSpace: 'pre-wrap'
                     }}>
                       {selectedRecord.notes}
@@ -206,12 +204,11 @@ const PatientRecords = () => {
                 {/* Follow-up date */}
                 {selectedRecord.followUpDate && (
                   <div style={{
-                    backgroundColor: '#fef3c7', border: '1px solid #fcd34d',
+                    backgroundColor: '#FDF6E8', border: '1px solid #E8C87A',
                     borderRadius: '8px', padding: '12px',
-                    fontSize: '14px', color: '#92400e',
+                    fontSize: '14px', color: '#9A7230',
                     display: 'flex', alignItems: 'center', gap: '8px'
                   }}>
-                    <span style={{ fontSize: '18px' }}>📅</span>
                     <span>
                       <strong>Follow-up Date:</strong> {formatDate(selectedRecord.followUpDate)}
                     </span>
@@ -228,7 +225,7 @@ const PatientRecords = () => {
                       className="btn btn-primary"
                       style={{ display: 'inline-block', textDecoration: 'none', padding: '10px 20px' }}
                     >
-                      📎 View Attachment
+                      View Attachment
                     </a>
                   </div>
                 )}

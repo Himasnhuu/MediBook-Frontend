@@ -69,7 +69,7 @@ const Home = () => {
       {/* ── NAVBAR ── */}
       <nav style={{
         backgroundColor: '#FFFFFF',
-        padding: '0 3rem',
+        padding: '0 1.5rem',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -77,22 +77,23 @@ const Home = () => {
         boxShadow: '0 2px 12px rgba(44,40,37,0.08)',
         position: 'sticky', top: 0, zIndex: 100
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '30px' }}>🏥</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '26px' }}>🏥</span>
           <div>
-            <span style={{ fontSize: '22px', fontWeight: '800', color: '#2D6B6B', letterSpacing: '-0.5px' }}>
+            <span style={{ fontSize: '20px', fontWeight: '800', color: '#2D6B6B', letterSpacing: '-0.5px' }}>
               MediBook
             </span>
-            <div style={{ fontSize: '10px', color: '#8C7E72', letterSpacing: '1.5px', marginTop: '-2px' }}>
+            <div style={{ fontSize: '10px', color: '#8C7E72', letterSpacing: '1.5px', marginTop: '-2px', display: 'none' }}
+              className="home-tagline">
               HEALTHCARE PLATFORM
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button
             onClick={() => navigate('/login')}
             style={{
-              padding: '9px 22px', fontSize: '14px', fontWeight: '600',
+              padding: '8px 18px', fontSize: '14px', fontWeight: '600',
               backgroundColor: 'transparent', color: '#2D6B6B',
               border: '2px solid #2D6B6B', borderRadius: '8px',
               cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'inherit'
@@ -105,7 +106,7 @@ const Home = () => {
           <button
             onClick={() => navigate('/register')}
             style={{
-              padding: '9px 22px', fontSize: '14px', fontWeight: '700',
+              padding: '8px 18px', fontSize: '14px', fontWeight: '700',
               backgroundColor: '#C9963F', color: 'white',
               border: 'none', borderRadius: '8px',
               cursor: 'pointer', transition: 'all 0.2s', fontFamily: 'inherit'
@@ -119,9 +120,8 @@ const Home = () => {
       </nav>
 
       {/* ── HERO ── */}
-      <div style={{
+      <div className="home-hero" style={{
         background: 'linear-gradient(135deg, #1F4E4E 0%, #2D6B6B 60%, #3D8C8C 100%)',
-        padding: '7rem 3rem',
         position: 'relative', overflow: 'hidden'
       }}>
         <div style={{
@@ -144,17 +144,18 @@ const Home = () => {
           }}>
             🏥 India's Trusted Healthcare Platform
           </div>
-          <h1 style={{
-            fontSize: '54px', fontWeight: '800', color: 'white',
+          <h1 className="home-hero-title" style={{
+            fontWeight: '800', color: 'white',
             lineHeight: '1.15', marginBottom: '1.2rem', letterSpacing: '-1px'
           }}>
             Book Smarter.<br />
             Heal Faster.<br />
             <span style={{ color: '#F0C878' }}>Care Better.</span>
           </h1>
-          <p style={{
-            fontSize: '18px', color: 'rgba(255,255,255,0.8)',
-            lineHeight: '1.7', maxWidth: '520px', margin: '0 auto 2.5rem'
+          <p className="home-hero-subtitle" style={{
+            color: 'rgba(255,255,255,0.9)',
+            lineHeight: '1.8', maxWidth: '520px', margin: '0 auto 2.5rem',
+            fontWeight: '400', letterSpacing: '0.2px'
           }}>
             Find the right doctor, book an appointment instantly,
             and manage your health — all in one place.
@@ -192,10 +193,10 @@ const Home = () => {
       </div>
 
       {/* ── STATS BAR ── */}
-      <div style={{
-        backgroundColor: '#FFFFFF', padding: '1.8rem 3rem',
+      <div className="home-stats" style={{
+        backgroundColor: '#FFFFFF',
         display: 'flex', justifyContent: 'center',
-        gap: '4rem', flexWrap: 'wrap',
+        flexWrap: 'wrap',
         borderBottom: '1px solid #E2D9CE'
       }}>
         {[
@@ -205,18 +206,18 @@ const Home = () => {
           { value: '24/7', label: 'Platform Access' }
         ].map((stat, i) => (
           <div key={i} style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '30px', fontWeight: '800', color: '#2D6B6B' }}>{stat.value}</p>
-            <p style={{ fontSize: '13px', color: '#8C7E72', marginTop: '2px', fontWeight: '500' }}>{stat.label}</p>
+            <p style={{ fontSize: '34px', fontWeight: '900', color: '#2D6B6B', letterSpacing: '-1px' }}>{stat.value}</p>
+            <p style={{ fontSize: '13px', color: '#8C7E72', marginTop: '4px', fontWeight: '500', letterSpacing: '0.3px' }}>{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* ── WHY CHOOSE US ── */}
-      <div style={{ padding: '5rem 3rem', backgroundColor: '#FAF7F2' }}>
+      <div className="home-section" style={{ backgroundColor: '#FAF7F2' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <p style={{ color: '#C9963F', fontWeight: '700', fontSize: '13px', letterSpacing: '2px', marginBottom: '8px' }}>OUR PROMISE</p>
-            <h2 style={{ fontSize: '36px', fontWeight: '800', color: '#2C2825', marginBottom: '12px' }}>Why Choose MediBook?</h2>
+            <h2 className="home-section-title" style={{ fontWeight: '800', color: '#2C2825', marginBottom: '12px' }}>Why Choose MediBook?</h2>
             <p style={{ color: '#8C7E72', fontSize: '16px', maxWidth: '500px', margin: '0 auto' }}>
               Everything you need for seamless, stress-free healthcare
             </p>
@@ -246,10 +247,11 @@ const Home = () => {
                 }}
               >
                 <div style={{
-                  width: '52px', height: '52px', borderRadius: '12px',
+                  width: '56px', height: '56px', borderRadius: '14px',
                   backgroundColor: '#E8F4F4', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
-                  fontSize: '24px', marginBottom: '1rem'
+                  fontSize: '26px', marginBottom: '1.2rem',
+                  border: '1px solid rgba(45,107,107,0.15)'
                 }}>
                   {f.icon}
                 </div>
@@ -262,11 +264,11 @@ const Home = () => {
       </div>
 
       {/* ── HOW IT WORKS ── */}
-      <div style={{ backgroundColor: '#FFFFFF', padding: '5rem 3rem' }}>
+      <div className="home-section" style={{ backgroundColor: '#FFFFFF' }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <p style={{ color: '#C9963F', fontWeight: '700', fontSize: '13px', letterSpacing: '2px', marginBottom: '8px' }}>SIMPLE PROCESS</p>
-            <h2 style={{ fontSize: '36px', fontWeight: '800', color: '#2C2825', marginBottom: '12px' }}>How It Works</h2>
+            <h2 className="home-section-title" style={{ fontWeight: '800', color: '#2C2825', marginBottom: '12px' }}>How It Works</h2>
             <p style={{ color: '#8C7E72', fontSize: '16px' }}>Get started in 3 simple steps</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '3rem' }}>
@@ -277,8 +279,12 @@ const Home = () => {
             ].map((item, i) => (
               <div key={i} style={{ textAlign: 'center' }}>
                 <div style={{
-                  fontSize: '48px', fontWeight: '900', color: '#E8F4F4',
-                  marginBottom: '0.5rem', fontFamily: 'Georgia, serif'
+                  fontSize: '52px', fontWeight: '900',
+                  background: 'linear-gradient(135deg, #2D6B6B 0%, #B8DADA 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  marginBottom: '0.5rem', fontFamily: 'Inter, sans-serif',
+                  letterSpacing: '-2px', lineHeight: 1
                 }}>
                   {item.step}
                 </div>
@@ -300,10 +306,14 @@ const Home = () => {
       </div>
 
       {/* ── BROWSE DOCTORS ── */}
-      <div id="doctors" style={{ padding: '5rem 3rem', backgroundColor: '#FAF7F2' }}>
+      <div id="doctors" className="home-section" style={{ backgroundColor: '#FAF7F2' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ marginBottom: '2rem' }}>
-            <p style={{ color: '#C9963F', fontWeight: '700', fontSize: '18px', letterSpacing: '3px' }}>OUR SPECIALISTS</p>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <p style={{ color: '#C9963F', fontWeight: '700', fontSize: '13px', letterSpacing: '2px', marginBottom: '8px' }}>OUR SPECIALISTS</p>
+            <h2 className="home-section-title" style={{ fontWeight: '800', color: '#2C2825', marginBottom: '12px' }}>Meet Our Doctors</h2>
+            <p style={{ color: '#8C7E72', fontSize: '16px', maxWidth: '480px', margin: '0 auto' }}>
+              Verified and trusted healthcare professionals ready to help you
+            </p>
           </div>
 
           {loading && <div style={{ textAlign: 'center', padding: '4rem', color: '#8C7E72' }}>Loading doctors...</div>}
@@ -367,19 +377,11 @@ const Home = () => {
                           }}
                         />
                       ) : (
-                        <svg width="160" height="200" viewBox="0 0 160 200" style={{ marginBottom: '-4px' }}>
-                          <ellipse cx="80" cy="185" rx="55" ry="20" fill="rgba(255,255,255,0.15)" />
-                          <rect x="38" y="110" width="84" height="90" rx="12" fill="white" opacity="0.95"/>
-                          <polygon points="80,110 65,130 80,140 95,130" fill="#E8F4F4"/>
-                          <path d="M60 120 Q55 145 65 155 Q75 165 80 160" stroke="#2D6B6B" strokeWidth="3" fill="none" strokeLinecap="round"/>
-                          <circle cx="80" cy="160" r="6" fill="#2D6B6B" opacity="0.8"/>
-                          <ellipse cx="80" cy="80" rx="32" ry="36" fill="#F5C9A0"/>
-                          <path d="M48 72 Q48 44 80 44 Q112 44 112 72 Q108 58 80 56 Q52 58 48 72" fill="#5C3D2E"/>
-                          <circle cx="68" cy="78" r="4" fill="white"/>
-                          <circle cx="92" cy="78" r="4" fill="white"/>
-                          <circle cx="69" cy="79" r="2" fill="#2C2825"/>
-                          <circle cx="93" cy="79" r="2" fill="#2C2825"/>
-                          <path d="M70 92 Q80 100 90 92" stroke="#C47A5A" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                        <svg width="130" height="150" viewBox="0 0 130 150">
+                          {/* Head */}
+                          <circle cx="65" cy="48" r="30" fill="rgba(255,255,255,0.9)"/>
+                          {/* Shoulders / body arc */}
+                          <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(255,255,255,0.9)"/>
                         </svg>
                       )}
 
@@ -424,13 +426,13 @@ const Home = () => {
               {/* Fade edges */}
               <div style={{
                 position: 'absolute', top: 0, left: 0,
-                width: '100px', height: '100%',
+                width: '60px', height: '100%',
                 background: 'linear-gradient(to right, #FAF7F2, transparent)',
                 pointerEvents: 'none', zIndex: 2
               }} />
               <div style={{
                 position: 'absolute', top: 0, right: 0,
-                width: '100px', height: '100%',
+                width: '60px', height: '100%',
                 background: 'linear-gradient(to left, #FAF7F2, transparent)',
                 pointerEvents: 'none', zIndex: 2
               }} />
@@ -457,7 +459,7 @@ const Home = () => {
       </div>
 
       {/* ── CTA SECTION ── */}
-      <div style={{ background: 'linear-gradient(135deg, #1F4E4E, #2D6B6B)', padding: '5rem 3rem', textAlign: 'center' }}>
+      <div className="home-section" style={{ background: 'linear-gradient(135deg, #1F4E4E, #2D6B6B)', textAlign: 'center' }}>
         <p style={{ color: '#F0C878', fontWeight: '700', fontSize: '13px', letterSpacing: '2px', marginBottom: '12px' }}>JOIN US TODAY</p>
         <h2 style={{ fontSize: '38px', fontWeight: '800', color: 'white', marginBottom: '12px' }}>
           Ready to Take Control<br />of Your Health?
@@ -496,13 +498,23 @@ const Home = () => {
       </div>
 
       {/* ── FOOTER ── */}
-      <div style={{ backgroundColor: '#1A1511', color: '#8C7E72', padding: '3rem', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '12px' }}>
+      <div style={{ backgroundColor: '#1A1511', color: '#8C7E72', padding: '2.5rem 1.5rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
           <span style={{ fontSize: '26px' }}>🏥</span>
-          <span style={{ fontSize: '20px', fontWeight: '800', color: 'white' }}>MediBook</span>
+          <span style={{ fontSize: '20px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>MediBook</span>
         </div>
-        <p style={{ fontSize: '13px', marginBottom: '6px' }}>Book Smarter. Heal Faster. Care Better.</p>
-        <p style={{ fontSize: '12px', color: '#5C524A' }}>© 2026 MediBook. All rights reserved.</p>
+        <p style={{ fontSize: '13px', marginBottom: '16px', color: '#8C7E72' }}>Book Smarter. Heal Faster. Care Better.</p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          {['Privacy Policy', 'Terms of Service', 'Contact Us'].map(link => (
+            <span key={link} style={{ fontSize: '12px', color: '#5C524A', cursor: 'pointer', transition: 'color 0.2s' }}
+              onMouseEnter={e => { e.target.style.color = '#8C7E72'; }}
+              onMouseLeave={e => { e.target.style.color = '#5C524A'; }}>
+              {link}
+            </span>
+          ))}
+        </div>
+        <div style={{ width: '60px', height: '1px', backgroundColor: '#2C2825', margin: '0 auto 16px' }} />
+        <p style={{ fontSize: '12px', color: '#3D342D' }}>© 2026 MediBook. All rights reserved.</p>
       </div>
 
       {/* ── DOCTOR DETAIL MODAL ── */}
@@ -546,10 +558,9 @@ const Home = () => {
                     <img src={detailDoctor.profilePhotoUrl} alt={detailDoctor.doctorName}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-                      stroke="#2D6B6B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
+                    <svg width="48" height="48" viewBox="0 0 130 150">
+                      <circle cx="65" cy="48" r="30" fill="#2D6B6B" opacity="0.7"/>
+                      <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="#2D6B6B" opacity="0.7"/>
                     </svg>
                   )}
                 </div>

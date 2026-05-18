@@ -1,174 +1,276 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 import ProviderAppointments from './ProviderAppointments';
 import ManageSlots from './ManageSlots';
 import Earnings from './Earnings';
 import ProviderProfile from './ProviderProfile';
 
 const NAV_ITEMS = [
-  { path: '/provider/appointments', label: '📅 My Appointments' },
-  { path: '/provider/slots',        label: '🕐 Manage Slots'    },
-  { path: '/provider/earnings',     label: '💰 Earnings'        },
-  { path: '/provider/profile',      label: '👤 My Profile'      },
+  { path: '/provider/appointments', label: 'My Appointments', short: 'A' },
+  { path: '/provider/slots',        label: 'Manage Slots',    short: 'S' },
+  { path: '/provider/earnings',     label: 'Earnings',        short: 'E' },
+  { path: '/provider/profile',      label: 'My Profile',      short: 'P' },
 ];
 
 const ProviderDashboard = () => {
   const { email, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [providerPhoto, setProviderPhoto] = useState(localStorage.getItem('providerPhoto') || null);
 
   const providerId = localStorage.getItem('providerId');
 
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [location.pathname]);
+
+  const truncateEmail = (e) => e && e.length > 22 ? e.slice(0, 20) + '…' : e;
+  const sidebarWidth = isMobile ? '260px' : (sidebarOpen ? '240px' : '64px');
+
   return (
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)' }}>
+    <div className="dashboard-wrapper">
 
-      {/* Sidebar */}
-      <div style={{
-        width: sidebarOpen ? '240px' : '60px',
-        backgroundColor: '#1F4E4E',
-        transition: 'width 0.2s',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '1rem 0',
-        flexShrink: 0
-      }}>
-        {/* Toggle */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          style={{
-            background: 'none', border: 'none',
-            color: '#8C7E72', cursor: 'pointer',
-            fontSize: '18px', padding: '8px 16px',
-            textAlign: 'right', marginBottom: '1rem'
-          }}
-        >
-          {sidebarOpen ? '◀' : '▶'}
-        </button>
+      {/* ── MOBILE OVERLAY ── */}
+      {isMobile && sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
 
-        {/* User info */}
-        {sidebarOpen && (
+      {/* ── SIDEBAR ── */}
+      <div
+        className={`dashboard-sidebar${isMobile ? (sidebarOpen ? ' open' : '') : ''}`}
+        style={{
+          width: sidebarWidth,
+          background: 'linear-gradient(180deg, #1A1511 0%, #2C2825 100%)',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: '1px solid rgba(255,255,255,0.06)'
+        }}
+      >
+        {/* Toggle — desktop only */}
+        {!isMobile && (
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            style={{
+              background: 'none', border: 'none',
+              color: '#5C524A', cursor: 'pointer',
+              fontSize: '12px', padding: '14px 16px',
+              textAlign: 'right', letterSpacing: '1px', transition: 'color 0.2s'
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#8C7E72'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = '#5C524A'; }}
+          >
+            {sidebarOpen ? '◀' : '▶'}
+          </button>
+        )}
+
+        {/* ── PROFILE SECTION ── */}
+        {(sidebarOpen || isMobile) && (
           <div style={{
-            padding: '0 1rem 1rem',
-            borderBottom: '1px solid #2A6060',
-            marginBottom: '1rem'
+            padding: isMobile ? '1rem 1.25rem 1.25rem' : '0.5rem 1.25rem 1.25rem',
+            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            marginBottom: '0.5rem'
           }}>
+            {isMobile && (
+              <button
+                onClick={() => setSidebarOpen(false)}
+                style={{
+                  background: 'none', border: 'none', color: '#5C524A',
+                  cursor: 'pointer', fontSize: '16px', marginBottom: '0.75rem',
+                  display: 'block', marginLeft: 'auto', padding: '4px'
+                }}
+              >✕</button>
+            )}
             <div style={{
-              width: '52px', height: '52px', borderRadius: '50%',
-              overflow: 'hidden', margin: '0 auto 6px',
-              border: '2px solid #0f766e',
-              backgroundColor: '#E8F4F4',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
+              width: '68px', height: '68px', borderRadius: '50%',
+              margin: '0 auto 10px', padding: '2px',
+              background: 'linear-gradient(135deg, #C9963F, #2D6B6B)',
             }}>
-              {localStorage.getItem('providerPhoto') ? (
-                <img
-                  src={localStorage.getItem('providerPhoto')}
-                  alt="Profile"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              ) : (
-                <span style={{ fontSize: '24px' }}>👨‍⚕️</span>
-              )}
-            </div>
-            <p style={{
-              color: '#E8F4F4', fontSize: '13px',
-              textAlign: 'center', wordBreak: 'break-all'
-            }}>
-              {email}
-            </p>
-            <p style={{
-              color: '#C9963F', fontSize: '11px',
-              textAlign: 'center', marginTop: '2px'
-            }}>
-              Provider
-            </p>
-            {providerId && (
-              <p style={{
-                color: '#8C7E72', fontSize: '11px',
-                textAlign: 'center', marginTop: '2px'
+              <div style={{
+                width: '100%', height: '100%', borderRadius: '50%',
+                overflow: 'hidden', backgroundColor: '#2C2825',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
+                {providerPhoto ? (
+                  <img src={providerPhoto} alt="Provider"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <svg width="42" height="48" viewBox="0 0 130 150">
+                    <circle cx="65" cy="48" r="30" fill="rgba(255,255,255,0.7)"/>
+                    <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(255,255,255,0.7)"/>
+                  </svg>
+                )}
+              </div>
+            </div>
+
+            <p style={{
+              color: '#D8D0C5', fontSize: '13px', fontWeight: '500',
+              textAlign: 'center', marginBottom: '6px'
+            }}>
+              {truncateEmail(email)}
+            </p>
+
+            <div style={{ textAlign: 'center', marginBottom: providerId ? '4px' : '0' }}>
+              <span style={{
+                display: 'inline-block',
+                backgroundColor: 'rgba(201,150,63,0.18)', color: '#E8C87A',
+                border: '1px solid rgba(201,150,63,0.35)',
+                borderRadius: '20px', fontSize: '10px', fontWeight: '700',
+                padding: '3px 12px', letterSpacing: '1.2px'
+              }}>
+                PROVIDER
+              </span>
+            </div>
+            {providerId && (
+              <p style={{ color: '#5C524A', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
                 ID: #{providerId}
               </p>
             )}
           </div>
         )}
 
-        {/* Nav items */}
-        <nav style={{ flex: 1 }}>
+        {/* Collapsed avatar — desktop only */}
+        {!sidebarOpen && !isMobile && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '0.5rem 0 1rem' }}>
+            <div style={{
+              width: '38px', height: '38px', borderRadius: '50%', padding: '2px',
+              background: 'linear-gradient(135deg, #C9963F, #2D6B6B)',
+            }}>
+              <div style={{
+                width: '100%', height: '100%', borderRadius: '50%',
+                backgroundColor: '#2C2825', overflow: 'hidden',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {providerPhoto ? (
+                  <img src={providerPhoto} alt="Provider"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <svg width="22" height="26" viewBox="0 0 130 150">
+                    <circle cx="65" cy="48" r="30" fill="rgba(255,255,255,0.7)"/>
+                    <path d="M0 148 Q0 88 65 88 Q130 88 130 148 Z" fill="rgba(255,255,255,0.7)"/>
+                  </svg>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── NAV ITEMS ── */}
+        <nav style={{ flex: 1, padding: '0.25rem 0' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = location.pathname === item.path;
+            const showLabel = sidebarOpen || isMobile;
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 style={{
                   width: '100%',
-                  background: isActive ? '#2D6B6B' : 'none',
-                  border: 'none', cursor: 'pointer',
-                  color: isActive ? 'white' : '#8C7E72',
-                  padding: sidebarOpen ? '12px 20px' : '12px 0',
-                  fontSize: '14px', fontWeight: isActive ? '600' : '400',
-                  transition: 'all 0.15s',
-                  textAlign: sidebarOpen ? 'left' : 'center',
-                  borderLeft: isActive ? '3px solid #C9963F' : '3px solid transparent'
+                  background: isActive ? 'rgba(201,150,63,0.12)' : 'transparent',
+                  border: 'none',
+                  borderLeft: isActive ? '3px solid #C9963F' : '3px solid transparent',
+                  cursor: 'pointer',
+                  color: isActive ? '#F0C878' : '#8C7E72',
+                  padding: showLabel ? '13px 20px' : '13px 0',
+                  fontSize: '14px',
+                  fontWeight: isActive ? '700' : '400',
+                  transition: 'all 0.15s ease',
+                  textAlign: showLabel ? 'left' : 'center',
+                  fontFamily: 'inherit'
+                }}
+                onMouseEnter={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.color = '#B8AFA6';
+                  }
+                }}
+                onMouseLeave={e => {
+                  if (!isActive) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = '#8C7E72';
+                  }
                 }}
               >
-                {sidebarOpen ? item.label : item.label.split(' ')[0]}
+                {showLabel ? item.label : item.short}
               </button>
             );
           })}
         </nav>
 
-        {/* Change Password */}
-        {sidebarOpen && (
-          <div
-            onClick={() => navigate('/change-password')}
-            style={{
-              padding: '10px 16px', cursor: 'pointer',
-              fontSize: '14px', color: 'rgba(255,255,255,0.75)',
-              display: 'flex', alignItems: 'center', gap: '10px',
-              borderRadius: '8px', transition: 'all 0.2s',
-              margin: '0 4px'
-            }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-          >
-            🔒 Change Password
-          </div>
-        )}
+        {/* ── BOTTOM ACTIONS ── */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: '0.5rem' }}>
+          {(sidebarOpen || isMobile) && (
+            <button
+              onClick={() => navigate('/change-password')}
+              style={{
+                width: '100%', background: 'none', border: 'none',
+                cursor: 'pointer', color: '#8C7E72',
+                padding: '11px 20px', fontSize: '13px', fontWeight: '500',
+                textAlign: 'left', fontFamily: 'inherit', transition: 'color 0.2s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#B8AFA6'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#8C7E72'; }}
+            >
+              Change Password
+            </button>
+          )}
 
-        {/* Logout */}
-        <button
-          onClick={logout}
-          style={{
-            background: 'none', border: 'none',
-            color: '#f87171', cursor: 'pointer',
-            padding: sidebarOpen ? '12px 20px' : '12px 0',
-            fontSize: '14px', fontWeight: '600',
-            textAlign: sidebarOpen ? 'left' : 'center',
-            borderTop: '1px solid #2A6060',
-            marginTop: '0.5rem'
-          }}
-        >
-          {sidebarOpen ? '🚪 Logout' : '🚪'}
-        </button>
+          <button
+            onClick={logout}
+            style={{
+              width: '100%', background: 'none', border: 'none',
+              cursor: 'pointer', color: '#C87070',
+              padding: (sidebarOpen || isMobile) ? '11px 20px' : '11px 0',
+              fontSize: '13px', fontWeight: '600',
+              textAlign: (sidebarOpen || isMobile) ? 'left' : 'center',
+              fontFamily: 'inherit', transition: 'all 0.2s', marginBottom: '0.5rem'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.color = '#F08080';
+              e.currentTarget.style.backgroundColor = 'rgba(200,112,112,0.08)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.color = '#C87070';
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            {(sidebarOpen || isMobile) ? 'Logout' : '←'}
+          </button>
+        </div>
       </div>
 
-      {/* Main content */}
-      <div style={{
-        flex: 1, padding: '2rem',
-        backgroundColor: '#FAF7F2',
-        overflowY: 'auto'
-      }}>
-        {/* Warning if providerId is missing */}
+      {/* ── MAIN CONTENT ── */}
+      <div
+        className="dashboard-content"
+        style={{ backgroundColor: '#FAF7F2', padding: '2rem' }}
+      >
+        {isMobile && (
+          <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)}>
+            ☰ Menu
+          </button>
+        )}
+
         {!providerId && (
           <div style={{
-            backgroundColor: '#fef3c7', border: '1px solid #fcd34d',
+            backgroundColor: '#FDF6E8', border: '1px solid #E8C87A',
             borderRadius: '8px', padding: '12px 16px',
-            marginBottom: '1.5rem', fontSize: '14px', color: '#92400e'
+            marginBottom: '1.5rem', fontSize: '14px', color: '#9A7230'
           }}>
-            ⚠️ Provider profile not found. Please make sure your provider profile is created.
+            Provider profile not found. Please make sure your provider profile is created.
           </div>
         )}
 
@@ -177,10 +279,9 @@ const ProviderDashboard = () => {
           <Route path="appointments" element={<ProviderAppointments />} />
           <Route path="slots"        element={<ManageSlots />} />
           <Route path="earnings"     element={<Earnings />} />
-          <Route path="profile" element={<ProviderProfile />} />
+          <Route path="profile"      element={<ProviderProfile />} />
         </Routes>
       </div>
-
     </div>
   );
 };
