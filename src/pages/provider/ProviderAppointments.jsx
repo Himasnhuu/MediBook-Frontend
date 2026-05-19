@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getAppointmentsByProvider, completeAppointment } from '../../api/appointmentApi';
-import { createRecord } from '../../api/medicalRecordApi';
+import { createRecord, getRecordsByProvider } from '../../api/medicalRecordApi';
 import { sendAppointmentCompletedNotification } from '../../api/notificationApi';
 
 const ProviderAppointments = () => {
@@ -19,12 +19,26 @@ const ProviderAppointments = () => {
     followUpDate: ''
   });
   const [savingRecord, setSavingRecord] = useState(false);
+  const [recordsMap, setRecordsMap] = useState({});
+  const [viewingRecord, setViewingRecord] = useState(null);
 
   const providerId = localStorage.getItem('providerId');
 
   useEffect(() => {
     fetchAppointments();
+    fetchRecords();
   }, []);
+
+  const fetchRecords = async () => {
+    try {
+      const records = await getRecordsByProvider(providerId);
+      const map = {};
+      records.forEach(r => { map[r.appointmentId] = r; });
+      setRecordsMap(map);
+    } catch (err) {
+      console.error('Failed to load records');
+    }
+  };
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -71,7 +85,7 @@ const ProviderAppointments = () => {
     }
     setSavingRecord(true);
     try {
-      await createRecord({
+      const saved = await createRecord({
         appointmentId: selectedAppointment.appointmentId,
         patientId: selectedAppointment.patientId,
         providerId: parseInt(providerId),
@@ -80,6 +94,7 @@ const ProviderAppointments = () => {
         notes: recordForm.notes,
         followUpDate: recordForm.followUpDate || null
       });
+      setRecordsMap(prev => ({ ...prev, [selectedAppointment.appointmentId]: saved }));
       toast.success('Medical record saved successfully');
       setShowRecordForm(false);
       setSelectedAppointment(null);
@@ -240,13 +255,24 @@ const ProviderAppointments = () => {
                         </button>
                       )}
                       {appt.status === 'COMPLETED' && (
-                        <button
-                          className="btn btn-primary"
-                          style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '600' }}
-                          onClick={() => openRecordForm(appt)}
-                        >
-                          Add Record
-                        </button>
+                        recordsMap[appt.appointmentId] ? (
+                          <button
+                            className="btn"
+                            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '600',
+                              backgroundColor: '#EBF5EF', color: '#3D7A5A', border: '1px solid #B8D8C6' }}
+                            onClick={() => setViewingRecord(recordsMap[appt.appointmentId])}
+                          >
+                            View Record
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-primary"
+                            style={{ padding: '6px 12px', fontSize: '12px', fontWeight: '600' }}
+                            onClick={() => openRecordForm(appt)}
+                          >
+                            Add Record
+                          </button>
+                        )
                       )}
                     </div>
                   </td>
@@ -361,6 +387,82 @@ const ProviderAppointments = () => {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── View Record Modal ── */}
+      {viewingRecord && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          backgroundColor: 'rgba(26,21,17,0.6)',
+          display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000,
+          padding: '1rem', backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            backgroundColor: '#FAF7F2', borderRadius: '20px',
+            width: '100%', maxWidth: '540px',
+            maxHeight: '90vh', overflowY: 'auto',
+            boxShadow: '0 16px 48px rgba(26,21,17,0.3)'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #1F4E4E, #2D6B6B)',
+              padding: '1.5rem 2rem', borderRadius: '20px 20px 0 0',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div>
+                <h3 style={{ fontSize: '17px', fontWeight: '800', color: 'white', marginBottom: '2px' }}>
+                  Medical Record
+                </h3>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+                  Appointment #{viewingRecord.appointmentId} — Patient #{viewingRecord.patientId}
+                </p>
+              </div>
+              <button
+                onClick={() => setViewingRecord(null)}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', border: 'none',
+                  borderRadius: '8px', width: '34px', height: '34px',
+                  color: 'white', fontSize: '16px', cursor: 'pointer'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ padding: '1.5rem 2rem' }}>
+              {[
+                { label: 'Diagnosis',     value: viewingRecord.diagnosis },
+                { label: 'Prescription',  value: viewingRecord.prescription },
+                { label: 'Notes',         value: viewingRecord.notes },
+                { label: 'Follow-up Date', value: viewingRecord.followUpDate ? formatDate(viewingRecord.followUpDate) : 'None' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ marginBottom: '1rem' }}>
+                  <p style={{ fontSize: '12px', fontWeight: '700', color: '#8C7E72',
+                    textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                    {label}
+                  </p>
+                  <div style={{
+                    backgroundColor: 'white', border: '1px solid #E2D9CE',
+                    borderRadius: '8px', padding: '10px 14px',
+                    fontSize: '14px', color: '#2C2825', minHeight: '40px',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {value || '—'}
+                  </div>
+                </div>
+              ))}
+              <button
+                className="btn"
+                onClick={() => setViewingRecord(null)}
+                style={{
+                  width: '100%', padding: '12px', marginTop: '0.5rem',
+                  backgroundColor: '#F2EDE4', color: '#8C7E72', border: '1px solid #E2D9CE'
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

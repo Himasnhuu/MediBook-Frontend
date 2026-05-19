@@ -25,6 +25,21 @@ export const refundPayment = async (paymentId) => {
   return response.data;
 };
 
+export const requestRefund = async (paymentId) => {
+  const response = await axiosInstance.put(`/payments/${paymentId}/request-refund`);
+  return response.data;
+};
+
+export const getAllPayments = async () => {
+  const response = await axiosInstance.get('/payments');
+  return response.data;
+};
+
+export const approveRefund = async (paymentId) => {
+  const response = await axiosInstance.put(`/payments/${paymentId}/refund`);
+  return response.data;
+};
+
 export const getPaymentStatus = async (paymentId) => {
   const response = await axiosInstance.get(`/payments/${paymentId}/status`);
   return response.data;

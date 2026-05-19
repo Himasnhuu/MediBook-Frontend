@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { getPaymentsByPatient, refundPayment } from '../../api/paymentApi';
+import { getPaymentsByPatient, requestRefund } from '../../api/paymentApi';
+import { getAppointmentsByPatient } from '../../api/appointmentApi';
 import { sendPaymentRefundedNotification } from '../../api/notificationApi';
 
 const PatientPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refundingId, setRefundingId] = useState(null);
+  const [appointmentsMap, setAppointmentsMap] = useState({});
   const patientId = localStorage.getItem('userId');
 
   useEffect(() => {
@@ -16,8 +18,14 @@ const PatientPayments = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const data = await getPaymentsByPatient(patientId);
+      const [data, appointments] = await Promise.all([
+        getPaymentsByPatient(patientId),
+        getAppointmentsByPatient(patientId)
+      ]);
       setPayments(data);
+      const map = {};
+      appointments.forEach(a => { map[a.appointmentId] = a; });
+      setAppointmentsMap(map);
     } catch (err) {
       toast.error('Failed to load payments');
     } finally {
@@ -26,20 +34,20 @@ const PatientPayments = () => {
   };
 
   const handleRefund = async (paymentId) => {
-    if (!window.confirm('Request a refund for this payment?')) return;
+    if (!window.confirm('Request a refund? This will be reviewed by admin.')) return;
     setRefundingId(paymentId);
     try {
-      await refundPayment(paymentId);
+      await requestRefund(paymentId);
       await sendPaymentRefundedNotification({
         userId: String(patientId),
         recipientEmail: localStorage.getItem('email'),
         amount: String(payments.find(p => p.paymentId === paymentId)?.amount || 0),
         transactionId: payments.find(p => p.paymentId === paymentId)?.transactionId || ''
       });
-      toast.success('Refund processed successfully');
+      toast.success('Refund request submitted. Admin will review shortly.');
       fetchPayments();
     } catch (err) {
-      toast.error(err.response?.data || 'Refund failed');
+      toast.error(err.response?.data || 'Refund request failed');
     } finally {
       setRefundingId(null);
     }
@@ -55,10 +63,11 @@ const PatientPayments = () => {
 
   const getStatusBadge = (status) => {
     const map = {
-      PAID:     'badge-success',
-      PENDING:  'badge-warning',
-      REFUNDED: 'badge-info',
-      FAILED:   'badge-danger'
+      PAID:              'badge-success',
+      PENDING:           'badge-warning',
+      REFUNDED:          'badge-info',
+      REFUND_REQUESTED:  'badge-warning',
+      FAILED:            'badge-danger'
     };
     return map[status] || 'badge-info';
   };
@@ -199,15 +208,27 @@ const PatientPayments = () => {
                     {formatDate(payment.paidAt)}
                   </td>
                   <td>
-                    {payment.status === 'PAID' && (
+                    {payment.status === 'PAID' &&
+                     appointmentsMap[payment.appointmentId]?.status !== 'COMPLETED' && (
                       <button
                         className="btn btn-warning"
                         style={{ padding: '6px 12px', fontSize: '12px' }}
                         onClick={() => handleRefund(payment.paymentId)}
                         disabled={refundingId === payment.paymentId}
                       >
-                        {refundingId === payment.paymentId ? 'Processing...' : 'Refund'}
+                        {refundingId === payment.paymentId ? 'Processing...' : 'Request Refund'}
                       </button>
+                    )}
+                    {payment.status === 'PAID' &&
+                     appointmentsMap[payment.appointmentId]?.status === 'COMPLETED' && (
+                      <span style={{ fontSize: '12px', color: '#8C7E72' }}>
+                        Non-refundable
+                      </span>
+                    )}
+                    {payment.status === 'REFUND_REQUESTED' && (
+                      <span style={{ fontSize: '12px', color: '#9A7230', fontWeight: '600' }}>
+                        Pending Admin Approval
+                      </span>
                     )}
                     {payment.status === 'REFUNDED' && (
                       <span style={{ fontSize: '12px', color: '#8C7E72' }}>

@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getRecordsByPatientSorted } from '../../api/medicalRecordApi';
+import { getAppointmentsByPatient } from '../../api/appointmentApi';
+import { getAllProviders } from '../../api/providerApi';
 
 const PatientRecords = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [appointmentsMap, setAppointmentsMap] = useState({});
+  const [providersMap, setProvidersMap] = useState({});
   const patientId = localStorage.getItem('userId');
 
   useEffect(() => {
@@ -15,8 +19,20 @@ const PatientRecords = () => {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const data = await getRecordsByPatientSorted(patientId);
-      setRecords(data);
+      const [records, appointments, providers] = await Promise.all([
+        getRecordsByPatientSorted(patientId),
+        getAppointmentsByPatient(patientId),
+        getAllProviders()
+      ]);
+      setRecords(records);
+
+      const apptMap = {};
+      appointments.forEach(a => { apptMap[a.appointmentId] = a; });
+      setAppointmentsMap(apptMap);
+
+      const provMap = {};
+      providers.forEach(p => { provMap[p.providerId] = p; });
+      setProvidersMap(provMap);
     } catch (err) {
       toast.error('Failed to load medical records');
     } finally {
@@ -94,7 +110,10 @@ const PatientRecords = () => {
                       {record.diagnosis || 'No diagnosis noted'}
                     </p>
                     <p style={{ color: '#8C7E72', fontSize: '12px', marginTop: '4px' }}>
-                      Appointment #{record.appointmentId}
+                      Dr. {providersMap[record.providerId]?.doctorName || `Provider #${record.providerId}`}
+                    </p>
+                    <p style={{ color: '#8C7E72', fontSize: '12px', marginTop: '2px' }}>
+                      {appointmentsMap[record.appointmentId]?.appointmentDate || ''}
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -141,6 +160,30 @@ const PatientRecords = () => {
                   <span className="badge badge-info">
                     Appointment #{selectedRecord.appointmentId}
                   </span>
+                </div>
+
+                {/* Doctor Info */}
+                <div style={{
+                  backgroundColor: '#E8F4F4', border: '1px solid #B8DADA',
+                  borderRadius: '8px', padding: '12px',
+                  marginBottom: '1.5rem',
+                  display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center', flexWrap: 'wrap', gap: '8px'
+                }}>
+                  <div>
+                    <p style={{ fontWeight: '700', color: '#2C2825', fontSize: '15px' }}>
+                      Dr. {providersMap[selectedRecord.providerId]?.doctorName || `Provider #${selectedRecord.providerId}`}
+                    </p>
+                    <p style={{ color: '#2D6B6B', fontSize: '13px', marginTop: '2px' }}>
+                      {providersMap[selectedRecord.providerId]?.specialization || '—'}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: '12px', color: '#8C7E72' }}>Appointment Date</p>
+                    <p style={{ fontWeight: '700', color: '#2C2825', fontSize: '14px' }}>
+                      {formatDate(appointmentsMap[selectedRecord.appointmentId]?.appointmentDate)}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Diagnosis */}

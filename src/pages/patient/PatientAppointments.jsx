@@ -171,6 +171,15 @@ const PatientAppointments = () => {
   };
 
   const handleCancelAppointment = async (appointmentId) => {
+    const appt = appointments.find(a => a.appointmentId === appointmentId);
+    if (appt) {
+      const appointmentDateTime = new Date(`${appt.appointmentDate}T${appt.startTime}`);
+      const hoursUntil = (appointmentDateTime - new Date()) / (1000 * 60 * 60);
+      if (hoursUntil < 12) {
+        toast.error('Cannot cancel within 12 hours of appointment. Fees are non-refundable.');
+        return;
+      }
+    }
     if (!window.confirm('Cancel this appointment?')) return;
     try {
       await cancelAppointment(appointmentId);
