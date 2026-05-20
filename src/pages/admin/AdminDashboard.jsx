@@ -5,11 +5,13 @@ import { toast } from 'react-toastify';
 import ManageProviders from './ManageProviders';
 import ManageUsers from './ManageUsers';
 import ManageSpecializations from './ManageSpecializations';
+import ManageRefunds from './ManageRefunds';
 
 const NAV_ITEMS = [
   { path: '/admin/providers',        label: 'Manage Providers', short: 'P' },
   { path: '/admin/users',            label: 'Manage Users',     short: 'U' },
   { path: '/admin/specializations',  label: 'Specializations',  short: 'S' },
+  { path: '/admin/refunds',          label: 'Manage Refunds',   short: 'R' },
 ];
 
 const AdminDashboard = () => {
@@ -284,6 +286,7 @@ const AdminDashboard = () => {
           <Route path="providers" element={<ManageProviders />} />
           <Route path="users"     element={<ManageUsers />} />
           <Route path="specializations" element={<ManageSpecializations />} />
+          <Route path="refunds"   element={<ManageRefunds />} />
         </Routes>
       </div>
     </div>

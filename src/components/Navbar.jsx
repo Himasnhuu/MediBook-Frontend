@@ -95,6 +95,10 @@ const Navbar = () => {
 
   if (location.pathname === '/') return null;
   if (location.pathname === '/doctors') return null;
+  if (location.pathname === ROUTES.LOGIN) return null;
+  if (location.pathname === ROUTES.REGISTER) return null;
+  if (location.pathname === '/forgot-password') return null;
+  if (location.pathname === '/change-password') return null;
 
   return (
     <nav style={{
@@ -114,7 +118,7 @@ const Navbar = () => {
         fontSize: '20px', fontWeight: '800',
         letterSpacing: '-0.5px', flexShrink: 0
       }}>
-        🏥 MediBook
+        MediBook
       </Link>
 
       {/* ── DESKTOP NAV ── */}
@@ -127,8 +131,14 @@ const Navbar = () => {
             }}>
               Dashboard
             </Link>
-            <span style={{ color: '#8C7E72', fontSize: '13px', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {email} ({role})
+            <span style={{
+              color: '#5C524A', fontSize: '12px', fontWeight: '600',
+              backgroundColor: '#F2EDE4', padding: '4px 12px',
+              borderRadius: '20px', border: '1px solid #E2D9CE',
+              maxWidth: '200px', overflow: 'hidden',
+              textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+            }}>
+              {localStorage.getItem('fullName') || email}
             </span>
 
             {/* Notification bell */}

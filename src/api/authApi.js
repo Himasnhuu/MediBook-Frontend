@@ -14,6 +14,11 @@ export const registerUser = async (userData) => {
   return response.data;
 };
 
+export const getAllUsers = async () => {
+  const response = await axiosInstance.get('/auth/users/all');
+  return response.data;
+};
+
 export const getUserByEmail = async (email) => {
   const response = await axiosInstance.get(
     `/auth/user?email=${email}`);

@@ -124,7 +124,7 @@ const ProviderDashboard = () => {
               {truncateEmail(email)}
             </p>
 
-            <div style={{ textAlign: 'center', marginBottom: providerId ? '4px' : '0' }}>
+            <div style={{ textAlign: 'center' }}>
               <span style={{
                 display: 'inline-block',
                 backgroundColor: 'rgba(201,150,63,0.18)', color: '#E8C87A',
@@ -135,11 +135,6 @@ const ProviderDashboard = () => {
                 PROVIDER
               </span>
             </div>
-            {providerId && (
-              <p style={{ color: '#5C524A', fontSize: '11px', textAlign: 'center', marginTop: '4px' }}>
-                ID: #{providerId}
-              </p>
-            )}
           </div>
         )}
 

@@ -40,6 +40,11 @@ export const approveRefund = async (paymentId) => {
   return response.data;
 };
 
+export const rejectRefund = async (paymentId) => {
+  const response = await axiosInstance.put(`/payments/${paymentId}/reject-refund`);
+  return response.data;
+};
+
 export const getPaymentStatus = async (paymentId) => {
   const response = await axiosInstance.get(`/payments/${paymentId}/status`);
   return response.data;

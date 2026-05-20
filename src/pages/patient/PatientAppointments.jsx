@@ -47,10 +47,22 @@ const PatientAppointments = () => {
     paymentMode: 'CARD'
   });
 
+  const [providersMap, setProvidersMap] = useState({});
+
   useEffect(() => {
     fetchAppointments();
     fetchSpecializations();
+    fetchProviders();
   }, []);
+
+  const fetchProviders = async () => {
+    try {
+      const data = await getAllProviders();
+      const map = {};
+      data.forEach(p => { map[p.providerId] = p; });
+      setProvidersMap(map);
+    } catch (err) {}
+  };
 
   const checkReviews = async (appointments) => {
     const completed = appointments.filter(a => a.status === 'COMPLETED');
@@ -415,55 +427,28 @@ const PatientAppointments = () => {
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th><th>Date</th><th>Time</th>
-                    <th>Service</th><th>Mode</th><th>Status</th><th>Action</th>
+                    <th>ID</th><th>Doctor</th>
+                    <th>Date</th><th>Time</th>
+                    <th>Service</th><th>Mode</th><th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {appointments.map(appt => (
                     <tr key={appt.appointmentId}>
                       <td>#{appt.appointmentId}</td>
+                      <td>
+                        <p style={{ fontWeight: '600', color: '#2C2825', fontSize: '13px', margin: 0 }}>
+                          Dr. {providersMap[appt.providerId]?.doctorName || `#${appt.providerId}`}
+                        </p>
+                        <p style={{ color: '#2D6B6B', fontSize: '12px', margin: 0 }}>
+                          {providersMap[appt.providerId]?.specialization || '—'}
+                        </p>
+                      </td>
                       <td>{appt.appointmentDate}</td>
-                      <td>{appt.startTime} - {appt.endTime}</td>
+                      <td>{appt.startTime?.slice(0, 5)} - {appt.endTime?.slice(0, 5)}</td>
                       <td>{appt.serviceType}</td>
                       <td>{appt.modeOfConsultation}</td>
                       <td><span className={`badge ${getStatusBadge(appt.status)}`}>{appt.status}</span></td>
-                      <td>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          {appt.status === 'SCHEDULED' && (
-                            <button
-                              className="btn btn-danger"
-                              style={{ padding: '6px 12px', fontSize: '12px' }}
-                              onClick={() => handleCancelAppointment(appt.appointmentId)}
-                            >
-                              Cancel
-                            </button>
-                          )}
-                          {appt.status === 'COMPLETED' && (
-                            reviewedIds.has(appt.appointmentId) ? (
-                              <span style={{ fontSize: '12px', color: '#3D7A5A', fontWeight: '600' }}>
-                                Reviewed
-                              </span>
-                            ) : (
-                              <button
-                                className="btn"
-                                style={{
-                                  padding: '6px 12px', fontSize: '12px',
-                                  backgroundColor: '#FDF6E8', color: '#9A7230',
-                                  border: '1px solid #E8C87A'
-                                }}
-                                onClick={() => {
-                                  setReviewAppointment(appt);
-                                  setReviewForm({ rating: 5, comment: '' });
-                                  setShowReviewModal(true);
-                                }}
-                              >
-                                Write Review
-                              </button>
-                            )
-                          )}
-                        </div>
-                      </td>
                     </tr>
                   ))}
                 </tbody>

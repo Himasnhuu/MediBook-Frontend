@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { getPaymentsByPatient, requestRefund } from '../../api/paymentApi';
 import { getAppointmentsByPatient } from '../../api/appointmentApi';
+import { getAllProviders } from '../../api/providerApi';
 import { sendPaymentRefundedNotification } from '../../api/notificationApi';
 
 const PatientPayments = () => {
@@ -9,6 +10,8 @@ const PatientPayments = () => {
   const [loading, setLoading] = useState(true);
   const [refundingId, setRefundingId] = useState(null);
   const [appointmentsMap, setAppointmentsMap] = useState({});
+  const [providersMap, setProvidersMap] = useState({});
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const patientId = localStorage.getItem('userId');
 
   useEffect(() => {
@@ -18,14 +21,18 @@ const PatientPayments = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      const [data, appointments] = await Promise.all([
+      const [data, appointments, providers] = await Promise.all([
         getPaymentsByPatient(patientId),
-        getAppointmentsByPatient(patientId)
+        getAppointmentsByPatient(patientId),
+        getAllProviders()
       ]);
       setPayments(data);
       const map = {};
       appointments.forEach(a => { map[a.appointmentId] = a; });
       setAppointmentsMap(map);
+      const provMap = {};
+      providers.forEach(p => { provMap[p.providerId] = p; });
+      setProvidersMap(provMap);
     } catch (err) {
       toast.error('Failed to load payments');
     } finally {
@@ -67,6 +74,7 @@ const PatientPayments = () => {
       PENDING:           'badge-warning',
       REFUNDED:          'badge-info',
       REFUND_REQUESTED:  'badge-warning',
+      REFUND_REJECTED:   'badge-danger',
       FAILED:            'badge-danger'
     };
     return map[status] || 'badge-info';
@@ -176,71 +184,101 @@ const PatientPayments = () => {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Appointment</th>
+                <th>Doctor</th>
+                <th>Appt. Date</th>
                 <th>Amount</th>
-                <th>Mode</th>
                 <th>Status</th>
-                <th>Transaction ID</th>
-                <th>Paid At</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
               {payments.map(payment => (
-                <tr key={payment.paymentId}>
+                <tr key={payment.paymentId}
+                    onClick={() => setSelectedPayment(payment)}
+                    style={{ cursor: 'pointer' }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8F5F0'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}>
                   <td>#{payment.paymentId}</td>
-                  <td>#{payment.appointmentId}</td>
+                  <td>
+                    <p style={{ fontWeight: '600', color: '#2C2825', fontSize: '13px', margin: 0 }}>
+                      Dr. {providersMap[appointmentsMap[payment.appointmentId]?.providerId]?.doctorName || '—'}
+                    </p>
+                    <p style={{ color: '#2D6B6B', fontSize: '12px', margin: 0 }}>
+                      {providersMap[appointmentsMap[payment.appointmentId]?.providerId]?.specialization || '—'}
+                    </p>
+                  </td>
+                  <td style={{ fontSize: '12px', color: '#5C524A' }}>
+                    {appointmentsMap[payment.appointmentId]?.appointmentDate || '—'}
+                  </td>
                   <td style={{ fontWeight: '700', color: '#2C2825' }}>
                     ₹{payment.amount?.toFixed(2)}
                   </td>
-                  <td style={{ color: '#5C524A' }}>{payment.mode}</td>
                   <td>
                     <span className={`badge ${getStatusBadge(payment.status)}`}>
                       {payment.status}
                     </span>
-                  </td>
-                  <td style={{ fontSize: '11px', color: '#8C7E72', fontFamily: 'monospace' }}>
-                    {payment.transactionId
-                      ? payment.transactionId.substring(0, 16) + '...'
-                      : '—'}
-                  </td>
-                  <td style={{ fontSize: '12px', color: '#5C524A' }}>
-                    {formatDate(payment.paidAt)}
-                  </td>
-                  <td>
-                    {payment.status === 'PAID' &&
-                     appointmentsMap[payment.appointmentId]?.status !== 'COMPLETED' && (
-                      <button
-                        className="btn btn-warning"
-                        style={{ padding: '6px 12px', fontSize: '12px' }}
-                        onClick={() => handleRefund(payment.paymentId)}
-                        disabled={refundingId === payment.paymentId}
-                      >
-                        {refundingId === payment.paymentId ? 'Processing...' : 'Request Refund'}
-                      </button>
-                    )}
-                    {payment.status === 'PAID' &&
-                     appointmentsMap[payment.appointmentId]?.status === 'COMPLETED' && (
-                      <span style={{ fontSize: '12px', color: '#8C7E72' }}>
-                        Non-refundable
-                      </span>
-                    )}
-                    {payment.status === 'REFUND_REQUESTED' && (
-                      <span style={{ fontSize: '12px', color: '#9A7230', fontWeight: '600' }}>
-                        Pending Admin Approval
-                      </span>
-                    )}
-                    {payment.status === 'REFUNDED' && (
-                      <span style={{ fontSize: '12px', color: '#8C7E72' }}>
-                        Refunded {formatDate(payment.refundedAt)}
-                      </span>
-                    )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </div>
+      )}
+
+      {selectedPayment && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(26,21,17,0.6)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            backgroundColor: '#FAF7F2', borderRadius: '20px',
+            width: '100%', maxWidth: '480px',
+            boxShadow: '0 16px 48px rgba(26,21,17,0.3)'
+          }}>
+            <div style={{
+              background: 'linear-gradient(135deg, #1F4E4E, #2D6B6B)',
+              padding: '1.5rem 2rem', borderRadius: '20px 20px 0 0',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <div>
+                <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', marginBottom: '2px' }}>
+                  Payment #{selectedPayment.paymentId}
+                </h3>
+                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+                  Dr. {providersMap[appointmentsMap[selectedPayment.appointmentId]?.providerId]?.doctorName || '—'}
+                  {' · '}
+                  {providersMap[appointmentsMap[selectedPayment.appointmentId]?.providerId]?.specialization || '—'}
+                </p>
+              </div>
+              <button onClick={() => setSelectedPayment(null)}
+                style={{ background: 'rgba(255,255,255,0.15)', border: 'none',
+                  borderRadius: '8px', width: '34px', height: '34px',
+                  color: 'white', fontSize: '16px', cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ padding: '1.5rem 2rem' }}>
+              {[
+                { label: 'Appointment Date', value: appointmentsMap[selectedPayment.appointmentId]?.appointmentDate || '—' },
+                { label: 'Amount', value: `₹${selectedPayment.amount?.toFixed(2)}` },
+                { label: 'Mode', value: selectedPayment.mode },
+                { label: 'Status', value: selectedPayment.status },
+                { label: 'Transaction ID', value: selectedPayment.transactionId || '—' },
+                { label: 'Paid At', value: formatDate(selectedPayment.paidAt) },
+                { label: 'Refunded At', value: selectedPayment.refundedAt ? formatDate(selectedPayment.refundedAt) : '—' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between',
+                  padding: '10px 0', borderBottom: '1px solid #E2D9CE' }}>
+                  <span style={{ color: '#8C7E72', fontSize: '13px' }}>{label}</span>
+                  <span style={{ fontWeight: '600', color: '#2C2825', fontSize: '13px' }}>{value}</span>
+                </div>
+              ))}
+              <button className="btn" onClick={() => setSelectedPayment(null)}
+                style={{ width: '100%', marginTop: '1rem', padding: '12px',
+                  backgroundColor: '#F2EDE4', color: '#8C7E72', border: '1px solid #E2D9CE' }}>
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

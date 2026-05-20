@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import { getAppointmentsByProvider, completeAppointment } from '../../api/appointmentApi';
 import { createRecord, getRecordsByProvider } from '../../api/medicalRecordApi';
 import { sendAppointmentCompletedNotification } from '../../api/notificationApi';
+import { getAllUsers } from '../../api/authApi';
 
 const ProviderAppointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -21,13 +22,27 @@ const ProviderAppointments = () => {
   const [savingRecord, setSavingRecord] = useState(false);
   const [recordsMap, setRecordsMap] = useState({});
   const [viewingRecord, setViewingRecord] = useState(null);
+  const [patientsMap, setPatientsMap] = useState({});
+  const [searchPatient, setSearchPatient] = useState('');
+  const [filterDate, setFilterDate] = useState('');
+  const [filterMode, setFilterMode] = useState('ALL');
 
   const providerId = localStorage.getItem('providerId');
 
   useEffect(() => {
     fetchAppointments();
     fetchRecords();
+    fetchPatients();
   }, []);
+
+  const fetchPatients = async () => {
+    try {
+      const data = await getAllUsers();
+      const map = {};
+      data.forEach(u => { map[u.id] = u; });
+      setPatientsMap(map);
+    } catch (err) {}
+  };
 
   const fetchRecords = async () => {
     try {
@@ -107,10 +122,10 @@ const ProviderAppointments = () => {
 
   const getStatusBadge = (status) => {
     const map = {
-      SCHEDULED: 'badge-info',
+      SCHEDULED: 'badge-warning',
       COMPLETED: 'badge-success',
       CANCELLED: 'badge-danger',
-      NO_SHOW:   'badge-warning'
+      NO_SHOW:   'badge-danger'
     };
     return map[status] || 'badge-info';
   };
@@ -122,11 +137,28 @@ const ProviderAppointments = () => {
     });
   };
 
+  const fmtTime = (t) => t?.slice(0, 5) || '';
+
   const FILTERS = ['ALL', 'SCHEDULED', 'COMPLETED', 'CANCELLED'];
 
-  const filtered = filter === 'ALL'
-    ? appointments
-    : appointments.filter(a => a.status === filter);
+  const STATUS_ORDER = { SCHEDULED: 0, COMPLETED: 1, CANCELLED: 2, NO_SHOW: 2 };
+
+  const filtered = appointments
+    .filter(a => filter === 'ALL' || a.status === filter)
+    .filter(a => {
+      if (!searchPatient) return true;
+      const name = patientsMap[a.patientId]?.fullName?.toLowerCase() || '';
+      return name.includes(searchPatient.toLowerCase());
+    })
+    .filter(a => !filterDate || a.appointmentDate === filterDate)
+    .filter(a => filterMode === 'ALL' || a.modeOfConsultation === filterMode)
+    .sort((a, b) => {
+      const so = (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3);
+      if (so !== 0) return so;
+      const da = new Date(`${a.appointmentDate}T${a.startTime}`);
+      const db = new Date(`${b.appointmentDate}T${b.startTime}`);
+      return a.status === 'SCHEDULED' ? da - db : db - da;
+    });
 
   return (
     <div>
@@ -168,8 +200,8 @@ const ProviderAppointments = () => {
         </div>
       )}
 
-      {/* Filter tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+      {/* Filter tabs + search */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
         {FILTERS.map(f => (
           <button
             key={f}
@@ -185,6 +217,48 @@ const ProviderAppointments = () => {
             {f}
           </button>
         ))}
+      </div>
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+        <input
+          type="text"
+          placeholder="Search patient..."
+          value={searchPatient}
+          onChange={e => setSearchPatient(e.target.value)}
+          style={{
+            padding: '8px 12px', fontSize: '13px', borderRadius: '8px',
+            border: '1.5px solid #E2D9CE', outline: 'none', flex: '1', minWidth: '160px',
+            backgroundColor: 'white', color: '#2C2825', fontFamily: 'inherit'
+          }}
+        />
+        <input
+          type="date"
+          value={filterDate}
+          onChange={e => setFilterDate(e.target.value)}
+          style={{
+            padding: '8px 12px', fontSize: '13px', borderRadius: '8px',
+            border: '1.5px solid #E2D9CE', outline: 'none',
+            backgroundColor: 'white', color: '#2C2825', fontFamily: 'inherit'
+          }}
+        />
+        <select
+          value={filterMode}
+          onChange={e => setFilterMode(e.target.value)}
+          style={{
+            padding: '8px 12px', fontSize: '13px', borderRadius: '8px',
+            border: '1.5px solid #E2D9CE', outline: 'none',
+            backgroundColor: 'white', color: '#2C2825', fontFamily: 'inherit'
+          }}
+        >
+          <option value="ALL">All Modes</option>
+          <option value="IN_PERSON">In Person</option>
+          <option value="TELECONSULTATION">Teleconsultation</option>
+        </select>
+        {(searchPatient || filterDate || filterMode !== 'ALL') && (
+          <button className="btn" onClick={() => { setSearchPatient(''); setFilterDate(''); setFilterMode('ALL'); }}
+            style={{ padding: '8px 14px', fontSize: '13px', backgroundColor: '#FBF0F0', color: '#A04040', border: '1px solid #E8C4C4' }}>
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Loading */}
@@ -214,26 +288,33 @@ const ProviderAppointments = () => {
           <table>
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Patient ID</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Service</th>
-                <th>Mode</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Sr. No.</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Patient</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Appt. Date</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Symptoms</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Mode</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Status</th>
+                <th style={{ position: 'sticky', top: 0, zIndex: 1, background: 'var(--warm-bg-2)' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(appt => (
-                <tr key={appt.appointmentId}>
-                  <td>#{appt.appointmentId}</td>
-                  <td>#{appt.patientId}</td>
-                  <td>{formatDate(appt.appointmentDate)}</td>
-                  <td style={{ fontSize: '13px' }}>
-                    {appt.startTime} - {appt.endTime}
+              {filtered.map((appt, idx) => (
+                <tr key={appt.appointmentId}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#F8F5F0'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = ''}>
+                  <td style={{ color: '#8C7E72', fontSize: '13px' }}>{idx + 1}</td>
+                  <td style={{ fontWeight: '600', color: '#2C2825' }}>
+                    {patientsMap[appt.patientId]?.fullName || `#${appt.patientId}`}
                   </td>
-                  <td>{appt.serviceType}</td>
+                  <td>
+                    <p style={{ fontWeight: '600', color: '#2C2825', fontSize: '13px', margin: 0 }}>
+                      {formatDate(appt.appointmentDate)}
+                    </p>
+                    <p style={{ color: '#8C7E72', fontSize: '12px', margin: 0 }}>
+                      {fmtTime(appt.startTime)} – {fmtTime(appt.endTime)}
+                    </p>
+                  </td>
+                  <td style={{ color: '#5C524A', fontSize: '13px' }}>{appt.serviceType}</td>
                   <td style={{ fontSize: '13px', color: '#5C524A' }}>
                     {appt.modeOfConsultation === 'IN_PERSON' ? 'In Person' : 'Teleconsultation'}
                   </td>
